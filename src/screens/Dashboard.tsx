@@ -165,7 +165,7 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
         ready={journal.available}
         loading={journal.loading}
       />
-      <DailyFormOverview />
+      <DailyFormOverview chartOnly />
       <Status />
       <CollapsibleCard
         title={

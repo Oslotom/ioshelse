@@ -10,7 +10,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Slider from "@react-native-community/slider";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,7 +29,7 @@ import { makeLogId } from "../data/journal";
 import { useJournal } from "../data/journal-store";
 import { Button, Copy, Heading, useReduceMotion, useVitalTheme } from "./UI";
 
-function MetricSlider({
+function MetricFaces({
   metric,
   value,
   onChange,
@@ -90,26 +89,31 @@ function MetricSlider({
           <Text style={{ fontSize: 12, color: theme.secondary }}> / 10</Text>
         </Animated.Text>
       </View>
-      <Slider
-        accessibilityLabel={metric.label}
-        accessibilityValue={{
-          min: 1,
-          max: 10,
-          now: value,
-          text: `${value} av 10. 1: ${metric.low}. 10: ${metric.high}.`,
-        }}
-        minimumValue={1}
-        maximumValue={10}
-        step={1}
-        value={value}
-        onValueChange={onChange}
-        onSlidingComplete={complete}
-        minimumTrackTintColor={color}
-        maximumTrackTintColor={theme.secondary + "44"}
-        thumbTintColor={color}
-        disabled={disabled}
-        style={{ width: "100%", height: 44 }}
-      />
+      <View accessibilityRole="radiogroup" accessibilityLabel={metric.label}
+        style={{ flexDirection: "row", gap: 5 }}>
+        {["😭", "🙁", "😐", "🙂", "😄"].map((face, index) => {
+          // Keep the existing 1–10 storage scale and reverse stress semantics.
+          const levels = [1, 3, 5, 8, 10];
+          const faceValue = levels[metric.key === "stress" ? 4 - index : index]!;
+          const nearest = levels.reduce((best, candidate) =>
+            Math.abs(candidate - value) < Math.abs(best - value) ? candidate : best);
+          const selected = nearest === faceValue;
+          return (
+            <Pressable key={face} disabled={disabled}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: selected, disabled }}
+              accessibilityLabel={`${metric.label}: ${faceValue} av 10. ${["Svært dårlig", "Dårlig", "Middels", "God", "Svært god"][index]}`}
+              onPress={() => { onChange(faceValue); complete(); }}
+              style={({ pressed }) => ({ flex: 1, minHeight: 50,
+                alignItems: "center", justifyContent: "center", borderRadius: 12,
+                backgroundColor: selected ? color + "22" : theme.card,
+                borderWidth: 2, borderColor: selected ? color : "transparent",
+                opacity: disabled ? 0.5 : pressed ? 0.7 : 1 })}>
+              <Text maxFontSizeMultiplier={1.2} style={{ fontSize: 27 }}>{face}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
       <View
         style={{
           flexDirection: "row",
@@ -125,7 +129,7 @@ function MetricSlider({
             color: theme.secondary,
           }}
         >
-          1 · {metric.low}
+          {metric.key === "stress" ? `10 · ${metric.high}` : `1 · ${metric.low}`}
         </Text>
         <Text
           style={{
@@ -136,7 +140,7 @@ function MetricSlider({
             color: theme.secondary,
           }}
         >
-          10 · {metric.high}
+          {metric.key === "stress" ? `1 · ${metric.low}` : `10 · ${metric.high}`}
         </Text>
       </View>
     </View>
@@ -251,7 +255,7 @@ export function DailyFormFields({
         {existing ? " · rediger registrering" : ""}
       </Copy>
       {dailyMetrics.map((metric) => (
-        <MetricSlider
+        <MetricFaces
           key={metric.key}
           metric={metric}
           value={metrics[metric.key]}

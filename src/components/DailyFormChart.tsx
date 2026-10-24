@@ -22,8 +22,10 @@ export function DailyFormChart({
   primary,
   secondary,
   onSelect,
+  range,
 }: {
   entries: DailyFormEntry[];
+  range?: { start: string; end: string };
   primary: DailySeries;
   secondary?: MetricKey;
   onSelect: (entry: DailyFormEntry) => void;
@@ -62,8 +64,8 @@ export function DailyFormChart({
         Ingen dagsform er registrert i perioden.
       </Text>
     );
-  const start = +dayDate(entries[0]!.day),
-    end = +dayDate(entries.at(-1)!.day),
+  const start = +dayDate(range?.start ?? entries[0]!.day),
+    end = +dayDate(range?.end ?? entries.at(-1)!.day),
     height = 180;
   const x = (date: string) =>
       end === start
@@ -190,10 +192,10 @@ export function DailyFormChart({
         }}
       >
         <Text style={{ color: theme.secondary, fontSize: 10 }}>
-          {entries[0]!.day}
+          {range?.start ?? entries[0]!.day}
         </Text>
         <Text style={{ color: theme.secondary, fontSize: 10 }}>
-          {entries.at(-1)!.day}
+          {range?.end ?? entries.at(-1)!.day}
         </Text>
       </View>
       <Text
@@ -204,8 +206,9 @@ export function DailyFormChart({
           marginTop: 10,
         }}
       >
-        Trykk eller dra for detaljer. Manglende dager vises som opphold. Stress
-        vises som råverdi i grafen; bare formscoren reverserer stress.
+        Trykk eller dra for detaljer. Manglende dager vises som opphold.
+        {(primary === "stress" || secondary === "stress") &&
+          " Stress vises som råverdi i grafen; bare formscoren reverserer stress."}
       </Text>
     </View>
   );

@@ -5,18 +5,23 @@ import {
   dailyMetrics,
   dailyScore,
   dayKey,
+  dayDate,
+  scoreMean,
   metricMean,
   metricTone,
   previousSeven,
 } from "../data/daily-form";
 import { useJournal } from "../data/journal-store";
-import { number } from "../data/models";
+import { addDays, number } from "../data/models";
 import { Button, Card, Copy, Title, useVitalTheme } from "./UI";
+import { DailyFormChart } from "./DailyFormChart";
 import { DailyFormSheet } from "./DailyFormEditor";
 export function DailyFormOverview({
   onEdit,
+  chartOnly = false,
 }: {
   onEdit?: (day: string) => void;
+  chartOnly?: boolean;
 }) {
   const journal = useJournal(),
     theme = useVitalTheme(),
@@ -25,6 +30,27 @@ export function DailyFormOverview({
     today = dayKey(new Date()),
     entry = entries.find((value) => value.day === today),
     previous = previousSeven(entries, today);
+  if (chartOnly) {
+    const start = dayKey(addDays(dayDate(today), -13));
+    const recent = entries.filter((item) => item.day >= start && item.day <= today);
+    const average = scoreMean(recent);
+    return <>
+      <Card>
+        <Title text="Dagens form" icon="sunny-outline" color={theme.mint} />
+        <Text style={{ fontSize: 32, fontWeight: "700", color: theme.text }}>
+          {entry ? number(dailyScore(entry), 1) : "–"}
+          <Text style={{ fontSize: 14, color: theme.secondary }}> / 10 · total formscore i dag</Text>
+        </Text>
+        <Copy small>Siste to uker · {recent.length} av 14 dager registrert{average === undefined ? "" : ` · snitt ${number(average, 1)} / 10`}</Copy>
+        <DailyFormChart entries={recent} primary="score" range={{ start, end: today }}
+          onSelect={(item) => setEditing(item.day)} />
+        <Copy small>Subjektiv indikator, ingen medisinsk vurdering. De seks målingene vektes likt; stress regnes som 11 − stress.</Copy>
+        <Button label={entry ? "Rediger dagens form" : "Registrer dagens form"}
+          disabled={journal.loading || !journal.available} onPress={() => setEditing(today)} />
+      </Card>
+      <DailyFormSheet day={editing} onClose={() => setEditing(undefined)} />
+    </>;
+  }
   return (
     <>
       <Card>
