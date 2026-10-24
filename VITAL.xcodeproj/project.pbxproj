@@ -1,0 +1,41 @@
+// !$*UTF8*$!
+{ archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
+09ECBBB9BA2E47316C817303 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+6DCD2CA582FA5891CAE9FA7A = { isa = PBXBuildFile; fileRef = 09ECBBB9BA2E47316C817303; };
+42E78D6A5EBCD468B5D4713B = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+C5801C22212E4E9749EA401F = { isa = PBXBuildFile; fileRef = 42E78D6A5EBCD468B5D4713B; };
+CF25C1128A8A86A60C37A1FA = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthStore.swift; sourceTree = "<group>"; };
+A92BFF5798A1B873927D850A = { isa = PBXBuildFile; fileRef = CF25C1128A8A86A60C37A1FA; };
+A8FE96903E420BEB3F5B2308 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+BE6E2EB4F21E6E6AB644DF35 = { isa = PBXBuildFile; fileRef = A8FE96903E420BEB3F5B2308; };
+CEABA66098264D495DE0E7AB = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screens.swift; sourceTree = "<group>"; };
+178221595C1833D60CAF321D = { isa = PBXBuildFile; fileRef = CEABA66098264D495DE0E7AB; };
+9F49A1BA6C237D8E915F4DC4 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
+78CE14B345CA9F9108FE78A3 = { isa = PBXBuildFile; fileRef = 9F49A1BA6C237D8E915F4DC4; };
+07EB97C616C0298E997E1941 = { isa = PBXFileReference; explicitFileType = wrapper.application; path = VITAL.app; sourceTree = BUILT_PRODUCTS_DIR; };
+FC627F3348FDBF87DE92ECC5 = { isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = VITALTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+0D6E4079E36703EBD37C0072 = { isa = PBXGroup; children = (E17E80AD8E2103CF3FC3FD96, 781CAA6738A604344AE86EE3, 0A3E27B8CA818264D75C8D81,); sourceTree = "<group>"; };
+E17E80AD8E2103CF3FC3FD96 = { isa = PBXGroup; path = VITAL; children = (09ECBBB9BA2E47316C817303, 42E78D6A5EBCD468B5D4713B, CF25C1128A8A86A60C37A1FA, A8FE96903E420BEB3F5B2308, CEABA66098264D495DE0E7AB,); sourceTree = "<group>"; };
+781CAA6738A604344AE86EE3 = { isa = PBXGroup; path = VITALTests; children = (9F49A1BA6C237D8E915F4DC4,); sourceTree = "<group>"; };
+0A3E27B8CA818264D75C8D81 = { isa = PBXGroup; name = Products; children = (07EB97C616C0298E997E1941, FC627F3348FDBF87DE92ECC5,); sourceTree = "<group>"; };
+6BAB02B549A96CC50D0CA977 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (6DCD2CA582FA5891CAE9FA7A, C5801C22212E4E9749EA401F, A92BFF5798A1B873927D850A, BE6E2EB4F21E6E6AB644DF35, 178221595C1833D60CAF321D,); runOnlyForDeploymentPostprocessing = 0; };
+093A8EEF16CCA81BE763994D = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+DAB7151652C25D9B83C5FD83 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+798B65A4B63A4D08FDD4C755 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (78CE14B345CA9F9108FE78A3,); runOnlyForDeploymentPostprocessing = 0; };
+497639E2F38DB3F946CE62A2 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+14F0309E5479D955E2A2D11E = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+1241936D4DD3AAD68FE7BFBD = { isa = PBXContainerItemProxy; containerPortal = 244210E48437B6556980A702; proxyType = 1; remoteGlobalIDString = A172CEDCAE47474B615C54D5; remoteInfo = VITAL; };
+F26350DAFE3F19AABFD69AC4 = { isa = PBXTargetDependency; target = A172CEDCAE47474B615C54D5; targetProxy = 1241936D4DD3AAD68FE7BFBD; };
+A172CEDCAE47474B615C54D5 = { isa = PBXNativeTarget; buildConfigurationList = 06CB67C35A91E16DBD17B949; buildPhases = (6BAB02B549A96CC50D0CA977, 093A8EEF16CCA81BE763994D, DAB7151652C25D9B83C5FD83,); buildRules = (); dependencies = (); name = VITAL; productName = VITAL; productReference = 07EB97C616C0298E997E1941; productType = "com.apple.product-type.application"; };
+9F86D081884C7D659A2FEAA0 = { isa = PBXNativeTarget; buildConfigurationList = 5FA394EFD07597E96CACD8E1; buildPhases = (798B65A4B63A4D08FDD4C755, 497639E2F38DB3F946CE62A2, 14F0309E5479D955E2A2D11E,); buildRules = (); dependencies = (F26350DAFE3F19AABFD69AC4,); name = VITALTests; productName = VITALTests; productReference = FC627F3348FDBF87DE92ECC5; productType = "com.apple.product-type.bundle.unit-test"; };
+73EBF6644258C120893E685D = { isa = XCBuildConfiguration; buildSettings = { IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; ENABLE_TESTABILITY = YES; DEBUG_INFORMATION_FORMAT = dwarf; }; name = Debug; };
+0B0C687DF8B6B8DC790B519C = { isa = XCBuildConfiguration; buildSettings = { IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = ""; ENABLE_TESTABILITY = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; }; name = Release; };
+76F8DEC3DFE0BDB465198890 = { isa = XCConfigurationList; buildConfigurations = (73EBF6644258C120893E685D, 0B0C687DF8B6B8DC790B519C,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+B00CCDD09424E369308D67FA = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = no.oslotom.vital; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = VITAL/Info.plist; CODE_SIGN_ENTITLEMENTS = VITAL/VITAL.entitlements; CODE_SIGN_STYLE = Automatic; TARGETED_DEVICE_FAMILY = 1; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Debug; };
+1B104479E55E37CF8A63CBDF = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = no.oslotom.vital; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = VITAL/Info.plist; CODE_SIGN_ENTITLEMENTS = VITAL/VITAL.entitlements; CODE_SIGN_STYLE = Automatic; TARGETED_DEVICE_FAMILY = 1; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_EMIT_LOC_STRINGS = YES; }; name = Release; };
+06CB67C35A91E16DBD17B949 = { isa = XCConfigurationList; buildConfigurations = (B00CCDD09424E369308D67FA, 1B104479E55E37CF8A63CBDF,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+DD3F495F7D6A5AA1C1769021 = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = no.oslotom.vital.tests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VITAL.app/VITAL"; BUNDLE_LOADER = "$(TEST_HOST)"; TARGETED_DEVICE_FAMILY = 1; CODE_SIGN_STYLE = Automatic; }; name = Debug; };
+E670BC2FFE794172EBC92AE3 = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = no.oslotom.vital.tests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VITAL.app/VITAL"; BUNDLE_LOADER = "$(TEST_HOST)"; TARGETED_DEVICE_FAMILY = 1; CODE_SIGN_STYLE = Automatic; }; name = Release; };
+5FA394EFD07597E96CACD8E1 = { isa = XCConfigurationList; buildConfigurations = (DD3F495F7D6A5AA1C1769021, E670BC2FFE794172EBC92AE3,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+244210E48437B6556980A702 = { isa = PBXProject; attributes = { LastUpgradeCheck = 1600; TargetAttributes = { A172CEDCAE47474B615C54D5 = { SystemCapabilities = { com.apple.HealthKit = { enabled = 1; }; }; }; }; }; buildConfigurationList = 76F8DEC3DFE0BDB465198890; compatibilityVersion = "Xcode 14.0"; developmentRegion = nb; hasScannedForEncodings = 0; knownRegions = (nb, en, Base); mainGroup = 0D6E4079E36703EBD37C0072; productRefGroup = 0A3E27B8CA818264D75C8D81; projectDirPath = ""; projectRoot = ""; targets = (A172CEDCAE47474B615C54D5, 9F86D081884C7D659A2FEAA0,); };
+}; rootObject = 244210E48437B6556980A702; }
