@@ -14,10 +14,18 @@ Bruk Node.js 22 LTS eller nyere. Fra prosjektroten:
 
 ```sh
 npm ci
-npm start
+npm run start:go
 ```
 
-Velg **Utforsk med demodata** for en tydelig merket demonstrasjon med 400 dagers aktivitet. Demomodus fungerer uten HealthKit og kan også brukes i Expo Go. Faktiske helsemålinger krever et native iOS-bygg; HealthKit er ikke tilgjengelig i Expo Go eller Android. Appen bytter aldri automatisk til falske målinger.
+Installer Expo Go fra App Store på iPhonen, ha telefon og datamaskin på samme Wi-Fi, og skann QR-koden med kameraet. Velg **Bruk iPhonens skritteller** og gi tilgang til **Bevegelse og trening**. Dette gir ekte skritt på en fysisk iPhone uten Apple Developer-konto eller eget EAS-bygg. Eksisterende brukere kan velge samme knapp under **Innstillinger → Datakilde**.
+
+Skritt fra `expo-sensors`/Core Motion er en separat kilde fra Apple Helse: de inkluderer ikke skritt fra Apple Watch eller andre HealthKit-kilder. Dagens total, timefordeling og seks tidligere kalenderdager hentes fra sensorhistorikken. Lengre historikk, forrige ukes sammenligning, distanse, energi, treningsminutter, puls, HRV, søvn og treningsøkter blir ikke estimert eller fylt med eksempler. Bare dag/uke kan velges i sensoranalysen. En ekte måling på null skritt vises som null.
+
+Ved avslag: åpne iPhone-innstillingene og gi Expo Go tilgang til Bevegelse og trening. I Expo Go viser tillatelsesdialogen vertsappens navn/tekst; `app.json` setter norsk bevegelsesbeskrivelse for egne native VITAL-bygg. Simulatorer og andre enheter uten en tilgjengelig skritteller viser en forklaring.
+
+**Utforsk med demodata** gir en tydelig merket demonstrasjon med 400 dagers aktivitet. Modusbytte tømmer den gamle oversikten, og feil eller manglende tilgang bytter aldri automatisk til demodata. Puls, søvn og andre Apple Helse-målinger krever fortsatt et native iOS-bygg med HealthKit. Dette er valgfritt for skritt i Expo Go.
+
+Oppdatering skjer ved åpning/aktivering, trekk-for-å-oppdatere og sensormeldinger i forgrunnen, maksimalt én sensorutløst oppdatering per 30 sekunder. Verdiene fra `watchStepCount` telles fra abonnementets start og legges derfor aldri til historiske totaler; appen henter nye, absolutte intervallmålinger. Ingen bakgrunnsovervåking eller lagring av skritthistorikk utover sensorens sju dager.
 
 ## Bygg med EAS
 
@@ -70,9 +78,11 @@ npm run export:ios
 npx expo prebuild --platform ios --no-install
 ```
 
-Automatiske tester dekker demototaler, fremtidige målinger, overlappende søvnintervaller, pulsbrudd, datogrenser, bevegelig snitt, komplette ukesammenligninger, nullbaser, månedssummer og kalenderdager. Kjør også `TZ=Europe/Oslo npm test` for sommertid.
+Automatiske tester for sensoradapteren bruker en kontrollert sensorerstatning og dekker tillatelser, avslag, manglende sensor, forespørselsgrenser, sommertid, målte nullverdier, feil og at kun skritt fylles ut. Testene bruker ikke faktisk iPhone-maskinvare. Øvrige tester dekker demototaler, fremtidige målinger, overlappende søvnintervaller, pulsbrudd, datogrenser, bevegelig snitt, komplette ukesammenligninger, nullbaser, månedssummer og kalenderdager. Kjør også `TZ=Europe/Oslo npm test` for sommertid.
 
 Linux-validering: TypeScript, beregningstester, iOS JavaScript/Hermes-bundling og native prosjektgenerering. Dette erstatter ikke et signert EAS/Xcode-bygg eller testing mot HealthKit på en iPhone.
+
+På fysisk iPhone i Expo Go: godta og avslå Bevegelse og trening, gå noen skritt og oppdater, sjekk dagens total/timefordeling og siste sju dager, gå til bakgrunnen og tilbake, og bytt mellom ekte data og demodata. Kontroller at puls/søvn/energi forblir tomme i sensormodus. Core Motion kan rapportere med forsinkelse og ha andre totaler enn Apple Helse.
 
 På enheten: kontroller alle faner, diagramvalg, periodeskifte, mål, miles/km, tema, stor tekst, VoiceOver og Reduser bevegelse. Test manglende/delvis/avslått HealthKit-tilgang, demobytte, forgrunnsoppdatering og varslingstillatelser. Sammenlign reelle summer med Apple Helse. Avklar endelig bundle-ID før distribusjon hvis eksisterende Expo-/Apple-app bruker en annen ID.
 
@@ -81,7 +91,7 @@ På enheten: kontroller alle faner, diagramvalg, periodeskifte, mål, miles/km, 
 - `src/App.tsx`: native navigasjon, fire faner og detaljskjermer.
 - `src/screens/`: oversikt, aktivitet, trender, skritt, puls og innstillinger.
 - `src/components/`: tilgjengelige diagrammer, kort og designsystem.
-- `src/data/`: HealthKit-adapter, demodata, MVVM-lignende tilstand og beregninger.
+- `src/data/`: skritteller- og HealthKit-adaptere, demodata, MVVM-lignende tilstand og beregninger.
 - `app.json` / `eas.json`: Expo- og byggekonfigurasjon.
 - `legacy/swiftui/`: bevart SwiftUI-prototype. Bruk Expo fra prosjektroten til videre utvikling.
 

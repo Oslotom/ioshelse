@@ -80,9 +80,10 @@ export function Segments<T extends string>({
 }
 const periods = ["Dag", "Uke", "Måned", "6 md.", "År"] as const;
 export function StepsDetail() {
-  const { data, preferences } = useHealth(),
+  const { data, preferences, phoneOnly } = useHealth(),
     theme = useVitalTheme();
-  const [period, setPeriod] = useState<(typeof periods)[number]>("Uke");
+  const [selectedPeriod, setPeriod] = useState<(typeof periods)[number]>("Uke");
+  const period = phoneOnly && selectedPeriod !== "Dag" ? "Uke" : selectedPeriod;
   const today = startOfDay(new Date()),
     end = addDays(today, 1);
   let start = addDays(
@@ -119,7 +120,11 @@ export function StepsDetail() {
   return (
     <Page>
       <Status />
-      <Segments values={periods} value={period} onChange={setPeriod} />
+      <Segments
+        values={phoneOnly ? ["Dag", "Uke"] : periods}
+        value={period}
+        onChange={setPeriod}
+      />
       <Card>
         <Copy>
           {dateLabel(start)}–{dateLabel(today)}
@@ -184,13 +189,18 @@ export function StepsDetail() {
       </Card>
       <Card>
         <Title text="Aktivitetskalender" icon="calendar" color={theme.mint} />
-        <Heatmap data={data.steps} goal={preferences.goal} theme={theme} />
+        <Heatmap
+          data={data.steps}
+          goal={preferences.goal}
+          theme={theme}
+          days={phoneOnly ? 7 : 91}
+        />
       </Card>
     </Page>
   );
 }
 export function HeartDetail() {
-  const { data } = useHealth(),
+  const { data, phoneOnly } = useHealth(),
     theme = useVitalTheme();
   const [period, setPeriod] = useState("Dag"),
     [date, setDate] = useState(new Date());
@@ -254,8 +264,9 @@ export function HeartDetail() {
           </>
         ) : (
           <Copy>
-            Ingen pulsmålinger i perioden. En kompatibel klokke eller pulsmåler
-            kan legge målinger i Helse.
+            {phoneOnly
+              ? "Puls, hvilepuls og HRV er ikke tilgjengelig fra iPhonens skritteller. Ekte skrittdata inneholder ingen pulsmålinger."
+              : "Ingen pulsmålinger i perioden. En kompatibel klokke eller pulsmåler kan legge målinger i Helse."}
           </Copy>
         )}
       </Card>
@@ -313,13 +324,21 @@ export function HeartDetail() {
   );
 }
 export function Activity({ onSteps }: { onSteps: () => void }) {
-  const { data } = useHealth(),
+  const { data, phoneOnly } = useHealth(),
     theme = useVitalTheme(),
     today = startOfDay(new Date()),
     week = addDays(today, -6);
   return (
     <Page>
       <Status />
+      {phoneOnly && (
+        <Card>
+          <Copy>
+            Skrittelleren gir ekte skritt, men ikke energiforbruk,
+            treningsminutter eller treningsøkter. Feltene under står tomme.
+          </Copy>
+        </Card>
+      )}
       <Card onPress={onSteps} label="Åpne skrittanalysen">
         <Title text="Skritt og distanse" icon="footsteps" color={theme.mint} />
         <BigValue
@@ -378,7 +397,7 @@ export function Activity({ onSteps }: { onSteps: () => void }) {
   );
 }
 export function Trends() {
-  const { data, preferences } = useHealth(),
+  const { data, preferences, phoneOnly } = useHealth(),
     theme = useVitalTheme(),
     today = startOfDay(new Date()),
     end = addDays(today, 1),
@@ -436,12 +455,20 @@ export function Trends() {
       </Card>
       <Card>
         <Title
-          text="Skritt · siste 30 dager"
+          text={
+            phoneOnly ? "Skritt · siste sju dager" : "Skritt · siste 30 dager"
+          }
           icon="footsteps"
           color={theme.mint}
         />
         <Chart data={month} theme={theme} color={theme.mint} />
       </Card>
+      {phoneOnly && (
+        <Copy>
+          Skrittelleren gir ikke distanse eller hvilepuls. Vi viser ingen
+          beregnede erstatninger for disse målingene.
+        </Copy>
+      )}
       <Card>
         <Title
           text="Distanse · siste sju dager"
@@ -478,7 +505,12 @@ export function Trends() {
       </Card>
       <Card>
         <Title text="Din rytme" icon="calendar" color={theme.mint} />
-        <Heatmap data={data.steps} goal={preferences.goal} theme={theme} />
+        <Heatmap
+          data={data.steps}
+          goal={preferences.goal}
+          theme={theme}
+          days={phoneOnly ? 7 : 91}
+        />
       </Card>
     </Page>
   );

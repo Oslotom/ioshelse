@@ -262,9 +262,17 @@ export function Status() {
         >
           {preferences.demo
             ? "Demodata · eksempelvisning"
-            : "Apple Helse · registrerte målinger"}
+            : preferences.source === "pedometer"
+              ? "iPhone · Bevegelse og trening"
+              : "Apple Helse · registrerte målinger"}
         </Text>
       </View>
+      {!preferences.demo && preferences.source === "pedometer" && (
+        <Copy small>
+          Ekte skritt · i dag og seks tidligere dager. Ikke data fra Apple
+          Helse.
+        </Copy>
+      )}
       {error && (
         <Text
           accessibilityRole="alert"
@@ -286,12 +294,14 @@ export function Status() {
   );
 }
 export function WeekSummary() {
-  const { data } = useHealth(),
+  const { data, phoneOnly } = useHealth(),
     change = weeklyChange(data.steps);
   return (
     <Copy>
       {change === undefined
-        ? "Sammenligning vises når vi har to hele uker med registrerte skritt."
+        ? phoneOnly
+          ? "Skrittelleren har bare sju dagers historikk. Sammenligning med forrige uke er derfor ikke tilgjengelig."
+          : "Sammenligning vises når vi har to hele uker med registrerte skritt."
         : `Du har gått ${number(Math.abs(change))} % ${change >= 0 ? "flere" : "færre"} skritt de siste sju hele dagene enn de sju foregående.`}
     </Copy>
   );

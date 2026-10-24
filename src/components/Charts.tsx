@@ -301,18 +301,20 @@ export function Heatmap({
   data,
   goal,
   theme,
+  days = 91,
 }: {
   data: Reading[];
   goal: number;
   theme: Theme;
+  days?: number;
 }) {
   const { width } = useWindowDimensions(),
     size = Math.max(8, Math.floor((width - 132) / 13));
   return (
     <View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
-        {Array.from({ length: 91 }, (_, i) => {
-          const date = addDays(startOfDay(new Date()), i - 90),
+        {Array.from({ length: days }, (_, i) => {
+          const date = addDays(startOfDay(new Date()), i - days + 1),
             value = data.find(
               (r) => +startOfDay(new Date(r.date)) === +date,
             )?.value;
@@ -336,7 +338,7 @@ export function Heatmap({
         })}
       </View>
       <Text style={{ color: theme.secondary, fontSize: 11, marginTop: 12 }}>
-        91 dager · mørkere farge betyr nærmere målet
+        {days} dager · mørkere farge betyr nærmere målet
       </Text>
     </View>
   );

@@ -33,7 +33,7 @@ export type DashboardProps = {
   onSettings: () => void;
 };
 export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
-  const { data, preferences } = useHealth(),
+  const { data, preferences, phoneOnly } = useHealth(),
     theme = useVitalTheme(),
     today = startOfDay(new Date()),
     tomorrow = addDays(today, 1);
@@ -169,13 +169,20 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
           </>
         ) : (
           <Copy>
-            Ingen pulsmålinger. En Apple Watch eller kompatibel pulsmåler kan
-            registrere puls i Helse.
+            {phoneOnly
+              ? "Puls er ikke tilgjengelig fra iPhonens skritteller. Den gir bare skritt, ikke pulsmålinger."
+              : "Ingen pulsmålinger. En Apple Watch eller kompatibel pulsmåler kan registrere puls i Helse."}
           </Copy>
         )}
       </Card>
       <Card>
         <Title text="I bevegelse" icon="flame" color={theme.orange} />
+        {phoneOnly && (
+          <Copy small>
+            Skrittelleren leverer ikke distanse, kalorier eller
+            treningsminutter. Vi lager ingen estimater fra skrittene.
+          </Copy>
+        )}
         {(["energy", "exercise"] as const).map((key) => {
           const rows = inRange(data[key], today, tomorrow);
           return (
@@ -215,7 +222,7 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
   );
 }
 export function SleepCard() {
-  const { data } = useHealth(),
+  const { data, phoneOnly } = useHealth(),
     theme = useVitalTheme(),
     today = startOfDay(new Date()),
     from = new Date(+today - 12 * 3600000);
@@ -298,8 +305,9 @@ export function SleepCard() {
         </>
       ) : (
         <Copy>
-          Ingen søvndata i natt. Registrer søvn med en kompatibel enhet eller i
-          Helse. Søvnfaser vises bare når de finnes.
+          {phoneOnly
+            ? "Søvn er ikke tilgjengelig fra iPhonens skritteller. Ingen søvntid eller søvnfaser blir beregnet fra skrittene dine."
+            : "Ingen søvndata i natt. Registrer søvn med en kompatibel enhet eller i Helse. Søvnfaser vises bare når de finnes."}
         </Copy>
       )}
     </Card>

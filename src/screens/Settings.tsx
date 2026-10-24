@@ -18,7 +18,8 @@ import { number } from "../data/models";
 import { Segments } from "./Analytics";
 
 export function Onboarding() {
-  const { update, setDemo, connect, error } = useHealth(),
+  const { update, setDemo, connect, connectPhone, healthKitAvailable, error } =
+      useHealth(),
     theme = useVitalTheme(),
     [connecting, setConnecting] = useState(false);
   return (
@@ -46,22 +47,36 @@ export function Onboarding() {
           color={theme.mint}
         />
         <Copy>
-          VITAL ber kun om å lese fra Apple Helse. Ingen konto, ingen server og
-          ingen deling av helseopplysninger.
+          Hent ekte skritt fra iPhonens bevegelsessensor, også i Expo Go. Ingen
+          Apple Developer-konto, server eller deling av helseopplysninger.
         </Copy>
         <Copy small>
-          Du velger selv hvilke opplysninger du gir tilgang til. Du kan
-          fortsette uten tilgang og endre dette senere i Helse.
+          Du blir spurt om tilgang til Bevegelse og trening. Skrittelleren gir
+          dagens skritt og opptil seks tidligere dager. Puls, søvn og energi er
+          ikke tilgjengelig fra denne sensoren.
         </Copy>
       </Card>
       <Button
-        label={connecting ? "Åpner Apple Helse …" : "Koble til Apple Helse"}
+        label={
+          connecting ? "Åpner skrittelleren …" : "Bruk iPhonens skritteller"
+        }
         disabled={connecting || Platform.OS !== "ios"}
         onPress={() => {
           setConnecting(true);
-          void connect().finally(() => setConnecting(false));
+          void connectPhone().finally(() => setConnecting(false));
         }}
       />
+      {healthKitAvailable && (
+        <Button
+          label="Bruk Apple Helse i stedet"
+          secondary
+          disabled={connecting}
+          onPress={() => {
+            setConnecting(true);
+            void connect().finally(() => setConnecting(false));
+          }}
+        />
+      )}
       <Button
         label="Utforsk med demodata"
         secondary
@@ -84,8 +99,8 @@ export function Onboarding() {
         </Text>
       )}
       <Copy small>
-        Apple Helse krever et native iOS-bygg. I Expo Go kan du bruke demodata.
-        VITAL gir ingen medisinske vurderinger.
+        Ekte skritt og demomodus holdes adskilt. Apple Helse er et valgfritt
+        alternativ i native iOS-bygg. VITAL gir ingen medisinske vurderinger.
       </Copy>
     </Page>
   );
@@ -125,6 +140,8 @@ export function Settings() {
       update,
       setDemo,
       connect,
+      connectPhone,
+      healthKitAvailable,
       refresh,
       lastRefresh,
       loading,
@@ -178,12 +195,47 @@ export function Settings() {
     <Page>
       <Status />
       <Card>
-        <Title text="Apple Helse" icon="heart" color={theme.coral} />
-        <Button
-          label="Be om lesetilgang"
-          onPress={() => void connect()}
-          disabled={Platform.OS !== "ios"}
+        <Title text="Datakilde" icon="footsteps" color={theme.mint} />
+        <Row
+          label="Valgt kilde for ekte data"
+          value={
+            preferences.source === "pedometer"
+              ? "iPhonens skritteller"
+              : "Apple Helse"
+          }
         />
+        <Button
+          label="Bruk iPhonens skritteller"
+          onPress={() => void connectPhone()}
+          disabled={Platform.OS !== "ios" || loading}
+        />
+        <Copy small>
+          Fungerer i Expo Go uten Apple Developer-konto. Krever tilgang til
+          Bevegelse og trening. Gir bare skritt fra iPhone, ikke målinger fra
+          klokker eller Apple Helse.
+        </Copy>
+        <Button
+          label="Åpne iPhone-innstillinger"
+          secondary
+          onPress={() => {
+            void Linking.openSettings().catch(() => {});
+          }}
+        />
+        {healthKitAvailable && (
+          <Button
+            label="Bruk Apple Helse i stedet"
+            secondary
+            disabled={loading}
+            onPress={() => void connect()}
+          />
+        )}
+        {!healthKitAvailable && (
+          <Copy small>
+            Puls, HRV, søvn, distanse og energi er ikke tilgjengelig fra
+            skrittelleren. Apple Helse krever et separat native iOS-bygg.
+          </Copy>
+        )}
+
         <Button
           label={loading ? "Oppdaterer …" : "Oppdater nå"}
           secondary
@@ -201,11 +253,13 @@ export function Settings() {
             })}
           />
         )}
-        <Copy small>
-          Apple oppgir ikke om lesetilgang er avslått. Manglende målinger kan
-          bety at data eller tilgang mangler. Administrer tilgang i Helse →
-          profil → Apper → VITAL.
-        </Copy>
+        {preferences.source === "healthkit" && (
+          <Copy small>
+            Apple oppgir ikke om lesetilgang er avslått. Manglende målinger kan
+            bety at data eller tilgang mangler. Administrer tilgang i Helse →
+            profil → Apper → VITAL.
+          </Copy>
+        )}
       </Card>
       <Card>
         <Title text="Dine mål" icon="flag" color={theme.mint} />
@@ -301,9 +355,9 @@ export function Settings() {
       <Card>
         <Title text="Personvern" icon="lock-closed" color={theme.mint} />
         <Copy>
-          Helseopplysningene blir på enheten. VITAL leser kun fra Apple Helse og
-          har ingen konto, analyseverktøy eller server. Kun innstillinger lagres
-          lokalt.
+          Opplysningene blir på enheten. VITAL leser fra iPhonens skritteller
+          eller, i native bygg, Apple Helse. Ingen konto, analyseverktøy eller
+          server. Kun innstillinger lagres lokalt.
         </Copy>
         <Row label="Versjon" value="1.0.0" />
       </Card>

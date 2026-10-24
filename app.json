@@ -45,7 +45,13 @@
           "NSHealthUpdateUsageDescription": false
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "VITAL bruker iPhonens bevegelsessensor til å vise skritt i dag og de siste dagene. Opplysningene blir på enheten."
+        }
+      ]
     ],
     "extra": {
       "eas": {

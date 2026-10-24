@@ -48,7 +48,7 @@ export async function authorizeHealth() {
   const health = getHealthKit();
   if (!health)
     throw new Error(
-      "Apple Helse krever en iOS-utviklingsbygg eller produksjonsbygg. Bruk demodata i Expo Go.",
+      "Apple Helse krever et native iOS-bygg. I Expo Go kan du bruke iPhonens skritteller eller demodata.",
     );
   const success = await health.requestAuthorization({
     toRead: readTypes,

@@ -11,11 +11,22 @@ import { AppState } from "react-native";
 import { Appearance } from "../theme";
 import { emptySnapshot } from "./models";
 import { makeDemo } from "./demo";
-import { authorizeHealth, loadHealth, observeHealth } from "./health";
+import {
+  authorizeHealth,
+  getHealthKit,
+  loadHealth,
+  observeHealth,
+} from "./health";
+import {
+  authorizePhoneSteps,
+  loadPhoneSteps,
+  observePhoneSteps,
+} from "./pedometer";
 
 type Preferences = {
   onboarded: boolean;
   demo: boolean;
+  source: "pedometer" | "healthkit";
   goal: number;
   miles: boolean;
   appearance: Appearance;
@@ -24,6 +35,7 @@ type Preferences = {
 const defaults: Preferences = {
   onboarded: false,
   demo: false,
+  source: "pedometer",
   goal: 10000,
   miles: false,
   appearance: "light",
@@ -50,6 +62,12 @@ function useModel() {
           setPreferences({
             ...defaults,
             ...p,
+            source:
+              p.source === "pedometer" || p.source === "healthkit"
+                ? p.source
+                : getHealthKit()
+                  ? "healthkit"
+                  : "pedometer",
             goal:
               typeof p.goal === "number" && p.goal >= 1000 && p.goal <= 40000
                 ? p.goal
@@ -85,7 +103,11 @@ function useModel() {
     setError(undefined);
     const demo = current.current.demo;
     try {
-      const next = demo ? makeDemo() : await loadHealth();
+      const next = demo
+        ? makeDemo()
+        : current.current.source === "pedometer"
+          ? await loadPhoneSteps()
+          : await loadHealth();
       if (ticket === generation.current) {
         setData(next);
         setLastRefresh(new Date());
@@ -118,10 +140,22 @@ function useModel() {
     setError(undefined);
     try {
       await authorizeHealth();
-      update({ onboarded: true });
+      update({ onboarded: true, source: "healthkit" });
       await setDemo(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kunne ikke åpne Apple Helse.");
+    }
+  }, [setDemo, update]);
+  const connectPhone = useCallback(async () => {
+    setError(undefined);
+    try {
+      await authorizePhoneSteps();
+      update({ onboarded: true, source: "pedometer" });
+      await setDemo(false);
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Kunne ikke åpne skrittelleren.",
+      );
     }
   }, [setDemo, update]);
   useEffect(() => {
@@ -136,7 +170,9 @@ function useModel() {
   useEffect(() => {
     if (!hydrated || !preferences.onboarded || preferences.demo) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const stop = observeHealth(() => {
+    const observe =
+      preferences.source === "pedometer" ? observePhoneSteps : observeHealth;
+    const stop = observe(() => {
       clearTimeout(timer);
       timer = setTimeout(() => void refresh(), 750);
     });
@@ -144,7 +180,13 @@ function useModel() {
       clearTimeout(timer);
       stop();
     };
-  }, [hydrated, preferences.onboarded, preferences.demo, refresh]);
+  }, [
+    hydrated,
+    preferences.onboarded,
+    preferences.demo,
+    preferences.source,
+    refresh,
+  ]);
   return {
     preferences,
     update,
@@ -156,6 +198,9 @@ function useModel() {
     refresh,
     setDemo,
     connect,
+    connectPhone,
+    phoneOnly: !preferences.demo && preferences.source === "pedometer",
+    healthKitAvailable: !!getHealthKit(),
   };
 }
 type Model = ReturnType<typeof useModel>;
