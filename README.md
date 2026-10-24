@@ -46,9 +46,11 @@ Oppdater til siste `main`, kjør `npm ci`, stopp gammel Metro med Ctrl+C og star
 
 ## Graffilter og minimering på Oversikt
 
-Under KPI-kortene velger du dato og Dag/Uke/Måned. Uke og Måned betyr henholdsvis sju og 30 kalenderdager til og med valgt dato. Valget oppdaterer skritt, puls, energi/trening/distanse, søvn og skritttrenden samtidig. Skrittellermodus tilbyr bare Dag/Uke og datoer innenfor tilgjengelig sjudagershistorikk; eldre dager utenfor lastede data står tomme, uten estimater. Dagvis skrittgraf viser timesummer hvis de er lastet inn, ellers merket døgnsum. Siste valgte dag kan være ufullstendig.
+Hvert grafkort har sin egen nedtrekksmeny merket med Dag/Uke/Måned og valgt dato. Åpne menyen for periodefaner og datovalg. Skritt, puls, aktivitet, søvn og skritttrend har uavhengige valg; endring i én graf endrer ikke de andre. Uke og Måned betyr sju og 30 kalenderdager til og med valgt dato. Skrittellermodus tilbyr bare Dag/Uke og datoer innenfor tilgjengelig sjudagershistorikk. Dager uten lastede data står tomme, uten estimater. Dagvis skrittgraf viser timesummer hvis de er lastet inn, ellers merket døgnsum.
 
-Trykk på overskriften i et grafkort for å minimere/utvide det. Minimerte kort beholder en kort oppsummering; dato- og periodevalget gjelder fortsatt. Grafene kan berøres uten å minimere kortet. Egne knapper åpner skritt- og pulsanalysen. Sammenligninger krever komplette registrerte kalenderdager i begge perioder og utelater dagens ufullstendige tall. Søvn viser natten eller snittet av registrerte netter i valgt periode. KPI-kortene bruker sine egne oppgitte journalperioder og påvirkes ikke av graffilteret.
+Trykk på kortoverskriften for å minimere/utvide. Minimerte kort viser oppsummering, valgt periode/dato og en liten linjegraf på høyre side, basert på samme utvalg. Ingen data vises som en strek, og en enkelt måling som et punkt. Pulskurver brytes ved opphold over 15 minutter; daglige serier brytes ved manglende dager. Søvnminigrafen viser varighet per registrert søvnintervall ved Dag og søvntid per natt ved Uke/Måned. Grafberøring og filtre utløser ikke minimering. Valgene beholdes ved minimering, mens nedtrekksmenyen lukkes.
+
+Egne knapper åpner skritt- og pulsanalysen. Sammenligninger krever komplette registrerte kalenderdager i begge perioder og utelater dagens ufullstendige tall. Søvn viser natten eller snittet av registrerte netter i kortets valgte periode. KPI-kortene bruker fortsatt sine egne oppgitte journalperioder.
 
 ## Form og registreringer
 

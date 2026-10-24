@@ -1,18 +1,28 @@
 import React, { PropsWithChildren, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Reading } from "../data/models";
+import { Sparkline } from "./Sparkline";
 import { Card, Title, useVitalTheme } from "./UI";
 export function CollapsibleCard({
   title,
   icon,
   color,
   summary,
+  filter,
+  sparkline = [],
+  sparklineLabel,
+  maxGap,
   children,
 }: PropsWithChildren<{
   title: string;
   icon: React.ComponentProps<typeof Ionicons>["name"];
   color: string;
   summary?: string;
+  filter?: React.ReactNode;
+  sparkline?: Reading[];
+  sparklineLabel?: string;
+  maxGap?: number;
 }>) {
   const [collapsed, setCollapsed] = useState(false),
     theme = useVitalTheme();
@@ -39,12 +49,21 @@ export function CollapsibleCard({
             </Text>
           )}
         </View>
+        {collapsed && (
+          <Sparkline
+            data={sparkline}
+            color={color}
+            maxGap={maxGap}
+            label={sparklineLabel ?? title}
+          />
+        )}
         <Ionicons
           name={collapsed ? "chevron-down" : "chevron-up"}
           color={theme.secondary}
           size={18}
         />
       </Pressable>
+      {!collapsed && filter}
       {!collapsed && children}
     </Card>
   );
