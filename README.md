@@ -188,3 +188,16 @@ hastighetssprang avvises. Opptil 10 000 GPS-punkter per økt lagres; tidtaking
 fortsetter dersom grensen nås. Demomodus beholder sin separate journal.
 GPS, kart og tillatelsesflyt må prøves på fysisk iPhone; skyverifisering dekker
 beregninger, lagring, typekontroll og iOS-bundling.
+
+Kartet i løpevisningen kan trykkes for fullskjerm med zoom og panorering.
+Lukk-knappen og systemets tilbakefunksjon går tilbake til økten. Aktiv GPS
+fortsetter under fullskjermskartet; kartet følger ikke automatisk posisjonen
+mens du utforsker det.
+
+**Aktivitet → Mine løpeturer** viser lokalt lagrede løpeturer, nyeste først,
+med distanse, aktiv tid og tempo når GPS-data finnes. Trykk på en tur for å
+åpne detaljene. Analysen inkluderer tempograf og kilometertider beregnet fra
+sammenhengende GPS-intervaller. Kilometergrenser fordeles mellom målte punkter;
+pauser og hull inngår ikke i GPS-tiden eller den målte distansen. GPS-tid kan
+avvike fra aktiv tid. Turer uten GPS beholder tid og notater, uten oppdiktet
+rute, tempo eller analyse.

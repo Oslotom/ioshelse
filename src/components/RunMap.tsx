@@ -7,13 +7,16 @@ import { RunPoint } from "../data/running";
 export const RunMap = React.memo(function RunMap({
   points,
   live = false,
+  follow = live,
   emptyTitle = "Din neste løpetur",
 }: {
   points: RunPoint[];
   live?: boolean;
+  follow?: boolean;
   emptyTitle?: string;
 }) {
   const map = useRef<MapView>(null);
+  const located = useRef(false);
   const last = points.at(-1);
   const groups: RunPoint[][] = [];
   points.forEach((point) => {
@@ -22,7 +25,8 @@ export const RunMap = React.memo(function RunMap({
     else groups.push([point]);
   });
   useEffect(() => {
-    if (!last) return;
+    if (!last || (live && !follow && located.current)) return;
+    located.current = true;
     if (live || points.length === 1)
       map.current?.animateToRegion(
         { ...last, latitudeDelta: 0.008, longitudeDelta: 0.008 },
@@ -33,7 +37,7 @@ export const RunMap = React.memo(function RunMap({
         edgePadding: { top: 115, bottom: 50, left: 40, right: 40 },
         animated: false,
       });
-  }, [points, live]);
+  }, [points, live, follow]);
   const fit = () => {
     if (points.length > 1)
       map.current?.fitToCoordinates(points, {

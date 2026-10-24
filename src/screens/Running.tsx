@@ -31,7 +31,8 @@ import {
 import { useRunTracking } from "../data/run-tracking";
 import { dateLabel, number } from "../data/models";
 import { withDeadline } from "../data/startup";
-import { RunMap } from "../components/RunMap";
+import { ExpandableRunMap } from "../components/ExpandableRunMap";
+import { RunAnalysis } from "../components/RunAnalysis";
 
 const ink = "#15171B",
   muted = "#727C89",
@@ -370,27 +371,20 @@ export function RunningScreen({
           </Text>
         ) : (
           <>
-            <View
-              style={{
-                height: mapHeight,
-                overflow: "hidden",
-                backgroundColor: "#EDF3F0",
-              }}
-            >
-              <RunMap
-                points={points}
-                live={!!active}
-                emptyTitle={
-                  saved
-                    ? "Ingen GPS-rute registrert"
-                    : active
-                      ? run?.gpsEnabled
-                        ? "Venter på posisjon"
-                        : "Tidtaking uten GPS"
-                      : "Din neste løpetur"
-                }
-              />
-            </View>
+            <ExpandableRunMap
+              height={mapHeight}
+              points={points}
+              live={!!active}
+              emptyTitle={
+                saved
+                  ? "Ingen GPS-rute registrert"
+                  : active
+                    ? run?.gpsEnabled
+                      ? "Venter på posisjon"
+                      : "Tidtaking uten GPS"
+                    : "Din neste løpetur"
+              }
+            />
             <View
               style={{
                 padding: 18,
@@ -430,7 +424,7 @@ export function RunningScreen({
                     Godt jobbet!
                   </Text>
                   <Text style={{ fontSize: 14, color: muted, lineHeight: 21 }}>
-                    Løpeturen er lagret. Du finner den igjen i Form → Trening.
+                    Løpeturen er lagret. Du finner den igjen under Aktivitet.
                   </Text>
                   <View
                     style={{
@@ -464,6 +458,7 @@ export function RunningScreen({
                       </Text>
                     )}
                   </View>
+                  <RunAnalysis run={run} />
                   <Text style={{ color: muted, fontSize: 12, lineHeight: 18 }}>
                     Distanse og tempo bygger på registrerte GPS-punkter og aktiv
                     tid. Svakt signal og opphold i sporingen kan gi

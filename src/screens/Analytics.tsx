@@ -1,3 +1,7 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useJournal } from "../data/journal-store";
+import { WorkoutEntry, timerLabel } from "../data/journal";
+import { runDistance, runSeconds, paceLabel } from "../data/running";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -365,7 +369,23 @@ export function HeartDetail() {
     </Page>
   );
 }
-export function Activity({ onSteps }: { onSteps: () => void }) {
+export function Activity({
+  onSteps,
+  onRun,
+}: {
+  onSteps: () => void;
+  onRun: (id?: string) => void;
+}) {
+  const journal = useJournal();
+  const [visibleRuns, setVisibleRuns] = useState(10);
+  const runs = journal.data.entries
+    .filter(
+      (entry): entry is WorkoutEntry =>
+        entry.kind === "workout" &&
+        entry.activity === "Løping" &&
+        +new Date(entry.endedAt) <= Date.now(),
+    )
+    .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
   const { data, phoneOnly } = useHealth(),
     theme = useVitalTheme(),
     today = startOfDay(new Date()),
@@ -377,10 +397,114 @@ export function Activity({ onSteps }: { onSteps: () => void }) {
         <Card>
           <Copy>
             Skrittelleren gir ekte skritt, men ikke energiforbruk,
-            treningsminutter eller treningsøkter. Feltene under står tomme.
+            treningsminutter. Løpeturer du registrerer med + vises nedenfor.
           </Copy>
         </Card>
       )}
+      <Card>
+        <Title text="Mine løpeturer" icon="walk-outline" color={theme.orange} />
+        {journal.data.active?.activity === "Løping" && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Åpne aktiv løpetur"
+            onPress={() => onRun()}
+            style={{
+              minHeight: 52,
+              padding: 14,
+              borderRadius: 16,
+              backgroundColor: theme.orange + "15",
+            }}
+          >
+            <Text style={{ color: theme.orange, fontWeight: "600" }}>
+              Løpetur pågår · fortsett →
+            </Text>
+          </Pressable>
+        )}
+        {journal.loading ? (
+          <Copy>Laster løpeturer …</Copy>
+        ) : journal.error ? (
+          <Copy>{journal.error}</Copy>
+        ) : !runs.length ? (
+          <Copy>
+            Ingen lagrede løpeturer ennå. Start en tur fra + i bunnmenyen.
+          </Copy>
+        ) : (
+          <>
+            <Copy small>
+              {runs.length} lagrede løpeturer · trykk for rute og analyse
+            </Copy>
+            {runs.slice(0, visibleRuns).map((run) => {
+              const distance = run.run ? runDistance(run.run) : undefined;
+              const seconds = run.run
+                ? runSeconds(run.startedAt, run.run, new Date(run.endedAt))
+                : run.seconds;
+              return (
+                <Pressable
+                  key={run.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Åpne løpetur ${dateLabel(run.startedAt, true)}`}
+                  onPress={() => onRun(run.id)}
+                  style={({ pressed }) => ({
+                    padding: 15,
+                    borderRadius: 18,
+                    backgroundColor: theme.track,
+                    gap: 9,
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text
+                        style={{
+                          color: theme.text,
+                          fontSize: 16,
+                          fontWeight: "600",
+                        }}
+                      >
+                        Løpetur
+                      </Text>
+                      <Text style={{ color: theme.secondary, fontSize: 12 }}>
+                        {dateLabel(run.startedAt, true)}
+                      </Text>
+                    </View>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color={theme.secondary}
+                    />
+                  </View>
+                  <Text style={{ color: theme.text, fontSize: 13 }}>
+                    {distance !== undefined && run.run?.points.length
+                      ? `${number(distance / 1000, 2)} km · `
+                      : ""}
+                    {timerLabel(seconds)}
+                    {distance !== undefined && distance >= 20
+                      ? ` · ${paceLabel(seconds, distance)} /km`
+                      : ""}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            {runs.length > visibleRuns && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setVisibleRuns((count) => count + 10)}
+                style={{ minHeight: 44, justifyContent: "center" }}
+              >
+                <Text style={{ color: theme.orange, fontWeight: "600" }}>
+                  Vis flere løpeturer
+                </Text>
+              </Pressable>
+            )}
+          </>
+        )}
+      </Card>
       <Card onPress={onSteps} label="Åpne skrittanalysen">
         <Title text="Skritt og distanse" icon="footsteps" color={theme.mint} />
         <BigValue

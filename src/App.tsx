@@ -121,7 +121,14 @@ function Tabs({ navigation }: NativeStackScreenProps<StackParams, "Main">) {
           )}
         </Tab.Screen>
         <Tab.Screen name="Aktivitet">
-          {() => <Activity onSteps={() => navigation.navigate("Steps")} />}
+          {() => (
+            <Activity
+              onSteps={() => navigation.navigate("Steps")}
+              onRun={(id) =>
+                navigation.navigate("Run", id ? { id } : undefined)
+              }
+            />
+          )}
         </Tab.Screen>
         <Tab.Screen
           name="Registrer"

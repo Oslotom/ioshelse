@@ -130,3 +130,47 @@ export function paceLabel(seconds: number, distance: number) {
   const pace = Math.round(seconds / (distance / 1000));
   return `${Math.floor(pace / 60)}:${String(pace % 60).padStart(2, "0")}`;
 }
+
+/** Analysis of connected GPS intervals; gaps and pauses never become distance or GPS time. */
+export function analyseRun(run: RunData) {
+  const pace: { date: string; value: number }[] = [];
+  const splits: { distance: number; seconds: number }[] = [];
+  let distance = 0,
+    gpsSeconds = 0,
+    splitDistance = 0,
+    splitSeconds = 0;
+  run.points.forEach((point, index, points) => {
+    const previous = points[index - 1];
+    if (!previous || previous.segment !== point.segment) return;
+    const metresHere = metres(previous, point),
+      secondsHere = (point.timestamp - previous.timestamp) / 1000;
+    if (metresHere <= 0 || secondsHere <= 0 || secondsHere > 30) return;
+    distance += metresHere;
+    gpsSeconds += secondsHere;
+    pace.push({
+      date: new Date(point.timestamp).toISOString(),
+      value: secondsHere / (metresHere / 1000) / 60,
+    });
+    let remaining = metresHere;
+    while (remaining > 0.000001) {
+      const chunk = Math.min(1000 - splitDistance, remaining);
+      splitDistance += chunk;
+      splitSeconds += (secondsHere * chunk) / metresHere;
+      remaining -= chunk;
+      if (splitDistance >= 999.999999) {
+        splits.push({ distance: 1000, seconds: splitSeconds });
+        splitDistance = 0;
+        splitSeconds = 0;
+      }
+    }
+  });
+  if (splitDistance > 0.01)
+    splits.push({ distance: splitDistance, seconds: splitSeconds });
+  return {
+    distance,
+    gpsSeconds,
+    pace,
+    splits,
+    segments: new Set(run.points.map((point) => point.segment)).size,
+  };
+}

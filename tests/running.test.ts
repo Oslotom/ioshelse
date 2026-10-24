@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   addRunPoint,
+  analyseRun,
   emptyRun,
   finalRun,
   paceLabel,
@@ -89,4 +90,32 @@ test("pace needs measured distance and valid route coordinates", () => {
       points: [{ ...point(0, 100), segment: 0 }],
     }),
   );
+});
+
+test("run analysis apportions kilometre boundaries and excludes GPS gaps", () => {
+  const latitude = (metres: number) =>
+    59.9 + ((metres / 6371000) * 180) / Math.PI;
+  const run = emptyRun(true);
+  run.points = Array.from({ length: 5 }, (_, i) => ({
+    ...point(i * 30, latitude(i * 300)),
+    segment: 0,
+  }));
+  run.points.push(
+    { ...point(500, 60), segment: 1 },
+    { ...point(520, 60 + ((200 / 6371000) * 180) / Math.PI), segment: 1 },
+  );
+  const result = analyseRun(run);
+  assert.ok(Math.abs(result.distance - 1400) < 0.01);
+  assert.equal(result.gpsSeconds, 140);
+  assert.equal(result.segments, 2);
+  assert.equal(result.pace.length, 5);
+  assert.equal(result.splits.length, 2);
+  assert.ok(Math.abs(result.splits[0]!.seconds - 100) < 0.01);
+  assert.ok(Math.abs(result.splits[1]!.distance - 400) < 0.01);
+  assert.ok(
+    Math.abs(
+      result.splits.reduce((sum, split) => sum + split.seconds, 0) - 140,
+    ) < 0.01,
+  );
+  assert.deepEqual(analyseRun(emptyRun(false)).splits, []);
 });
