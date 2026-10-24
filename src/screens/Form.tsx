@@ -15,7 +15,8 @@ import {
   JournalEntry,
   timerLabel,
 } from "../data/journal";
-import { dateLabel, number, startOfDay } from "../data/models";
+import { dateLabel, number } from "../data/models";
+import { JournalKPIs } from "../components/JournalKPIs";
 import { useHealth } from "../data/store";
 import {
   Button,
@@ -48,10 +49,6 @@ export function FormScreen() {
       (filter === "Trening" && entry.kind === "workout") ||
       (filter === "Blodsukker" && entry.kind === "glucose"),
   );
-  const today = startOfDay(new Date()),
-    todayCount = journal.data.entries.filter(
-      (entry) => +new Date(entry.date) >= +today,
-    ).length;
   async function finish() {
     setActionError(undefined);
     try {
@@ -111,21 +108,17 @@ export function FormScreen() {
       ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
       ListHeaderComponent={
         <View style={{ gap: 20, marginBottom: 20 }}>
+          <JournalKPIs
+            entries={journal.data.entries}
+            ready={journal.available}
+            loading={journal.loading}
+          />
           <Card>
             <Title
               text="Din personlige logg"
               icon="journal-outline"
               color={theme.mint}
             />
-            <Text
-              style={{ fontSize: 30, fontWeight: "700", color: theme.text }}
-            >
-              {journal.loading
-                ? "Laster loggen …"
-                : !journal.available
-                  ? "Historikken er ikke lastet"
-                  : `${todayCount} ${todayCount === 1 ? "registrering" : "registreringer"} i dag`}
-            </Text>
             <Copy>
               Bruk + i bunnmenyen for å logge form, starte trening eller
               registrere blodsukker.
