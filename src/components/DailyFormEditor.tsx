@@ -89,27 +89,48 @@ function MetricFaces({
           <Text style={{ fontSize: 12, color: theme.secondary }}> / 10</Text>
         </Animated.Text>
       </View>
-      <View accessibilityRole="radiogroup" accessibilityLabel={metric.label}
-        style={{ flexDirection: "row", gap: 5 }}>
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel={metric.label}
+        style={{ flexDirection: "row", gap: 5 }}
+      >
         {["😭", "🙁", "😐", "🙂", "😄"].map((face, index) => {
           // Keep the existing 1–10 storage scale and reverse stress semantics.
           const levels = [1, 3, 5, 8, 10];
-          const faceValue = levels[metric.key === "stress" ? 4 - index : index]!;
+          const faceValue =
+            levels[metric.key === "stress" ? 4 - index : index]!;
           const nearest = levels.reduce((best, candidate) =>
-            Math.abs(candidate - value) < Math.abs(best - value) ? candidate : best);
+            Math.abs(candidate - value) < Math.abs(best - value)
+              ? candidate
+              : best,
+          );
           const selected = nearest === faceValue;
           return (
-            <Pressable key={face} disabled={disabled}
+            <Pressable
+              key={face}
+              disabled={disabled}
               accessibilityRole="radio"
               accessibilityState={{ checked: selected, disabled }}
               accessibilityLabel={`${metric.label}: ${faceValue} av 10. ${["Svært dårlig", "Dårlig", "Middels", "God", "Svært god"][index]}`}
-              onPress={() => { onChange(faceValue); complete(); }}
-              style={({ pressed }) => ({ flex: 1, minHeight: 50,
-                alignItems: "center", justifyContent: "center", borderRadius: 12,
+              onPress={() => {
+                onChange(faceValue);
+                complete();
+              }}
+              style={({ pressed }) => ({
+                flex: 1,
+                minHeight: 50,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 12,
                 backgroundColor: selected ? color + "22" : theme.card,
-                borderWidth: 2, borderColor: selected ? color : "transparent",
-                opacity: disabled ? 0.5 : pressed ? 0.7 : 1 })}>
-              <Text maxFontSizeMultiplier={1.2} style={{ fontSize: 27 }}>{face}</Text>
+                borderWidth: 2,
+                borderColor: selected ? color : "transparent",
+                opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
+              })}
+            >
+              <Text maxFontSizeMultiplier={1.2} style={{ fontSize: 27 }}>
+                {face}
+              </Text>
             </Pressable>
           );
         })}
@@ -129,7 +150,9 @@ function MetricFaces({
             color: theme.secondary,
           }}
         >
-          {metric.key === "stress" ? `10 · ${metric.high}` : `1 · ${metric.low}`}
+          {metric.key === "stress"
+            ? `10 · ${metric.high}`
+            : `1 · ${metric.low}`}
         </Text>
         <Text
           style={{
@@ -140,7 +163,9 @@ function MetricFaces({
             color: theme.secondary,
           }}
         >
-          {metric.key === "stress" ? `1 · ${metric.low}` : `10 · ${metric.high}`}
+          {metric.key === "stress"
+            ? `1 · ${metric.low}`
+            : `10 · ${metric.high}`}
         </Text>
       </View>
     </View>
@@ -389,11 +414,21 @@ export function DailyFormSheet({
     insets = useSafeAreaInsets(),
     reduce = useReduceMotion(),
     [saving, setSaving] = useState(false);
+  const opening = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!day) return;
+    opening.setValue(reduce ? 1 : 0);
+    Animated.timing(opening, {
+      toValue: 1,
+      duration: reduce ? 0 : 260,
+      useNativeDriver: true,
+    }).start();
+  }, [day, reduce, opening]);
   return (
     <Modal
       visible={!!day}
       transparent
-      animationType={reduce ? "none" : "slide"}
+      animationType={reduce ? "none" : "fade"}
       onRequestClose={() => {
         if (!saving) onClose();
       }}
@@ -410,14 +445,23 @@ export function DailyFormSheet({
           style={{
             position: "absolute",
             inset: 0,
-            backgroundColor: "#00000055",
+            backgroundColor: "#17232D55",
           }}
         />
-        <View
+        <Animated.View
           accessibilityViewIsModal
           style={{
             maxHeight: "94%",
             backgroundColor: theme.card,
+            overflow: "hidden",
+            transform: [
+              {
+                translateY: opening.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [360, 0],
+                }),
+              },
+            ],
             borderTopLeftRadius: 28,
             borderTopRightRadius: 28,
             paddingBottom: Math.max(18, insets.bottom),
@@ -465,7 +509,7 @@ export function DailyFormSheet({
               />
             )}
           </ScrollView>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );

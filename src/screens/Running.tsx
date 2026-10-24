@@ -9,8 +9,12 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  useSafeAreaInsets,
+  SafeAreaView,
+} from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Location from "expo-location";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -136,6 +140,9 @@ export function RunningScreen({
   navigation,
   route,
 }: NativeStackScreenProps<StackParams, "Run">) {
+  const insets = useSafeAreaInsets(),
+    { height } = useWindowDimensions();
+  const mapHeight = Math.min(320, Math.max(240, height * 0.4));
   const journal = useJournal(),
     status = useRunTracking();
   const [now, setNow] = useState(new Date()),
@@ -288,7 +295,7 @@ export function RunningScreen({
   const isDetail = !!route.params?.id;
   return (
     <SafeAreaView
-      edges={["top", "bottom"]}
+      edges={["bottom"]}
       style={{ flex: 1, backgroundColor: "#F7F8FA" }}
     >
       <StatusBar style="dark" />
@@ -296,7 +303,18 @@ export function RunningScreen({
         style={{
           flexDirection: "row",
           alignItems: "center",
-          padding: 18,
+          position: "absolute",
+          top: insets.top + 10,
+          left: 16,
+          right: 16,
+          zIndex: 10,
+          padding: 10,
+          borderRadius: 24,
+          backgroundColor: "#FFFFFFF2",
+          shadowColor: "#21362A",
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
           gap: 14,
         }}
       >
@@ -354,9 +372,7 @@ export function RunningScreen({
           <>
             <View
               style={{
-                height: 310,
-                marginHorizontal: 16,
-                borderRadius: 28,
+                height: mapHeight,
                 overflow: "hidden",
                 backgroundColor: "#EDF3F0",
               }}
@@ -375,7 +391,16 @@ export function RunningScreen({
                 }
               />
             </View>
-            <View style={{ padding: 18, gap: 16 }}>
+            <View
+              style={{
+                padding: 18,
+                gap: 14,
+                marginTop: -24,
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
+                backgroundColor: "#F7F8FA",
+              }}
+            >
               {(active || saved) && (
                 <View
                   style={{ flexDirection: "row", alignItems: "center", gap: 7 }}
@@ -502,6 +527,30 @@ export function RunningScreen({
                 </>
               ) : (
                 <>
+                  {journal.data.active ? (
+                    <>
+                      <Text style={{ color: muted }}>
+                        Du har en annen treningsøkt på gang. Avslutt den før du
+                        starter en løpetur.
+                      </Text>
+                      <Action
+                        label="Åpne aktiv trening"
+                        icon="fitness"
+                        onPress={() =>
+                          navigation.popTo("Main", { screen: "Form" })
+                        }
+                      />
+                    </>
+                  ) : (
+                    <Action
+                      label={working ? "Starter …" : "Start løpetur"}
+                      icon="play"
+                      disabled={
+                        working || journal.loading || !journal.available
+                      }
+                      onPress={() => void start()}
+                    />
+                  )}
                   <View
                     style={{
                       padding: 18,
@@ -566,30 +615,6 @@ export function RunningScreen({
                       }}
                     />
                   </View>
-                  {journal.data.active ? (
-                    <>
-                      <Text style={{ color: muted }}>
-                        Du har en annen treningsøkt på gang. Avslutt den før du
-                        starter en løpetur.
-                      </Text>
-                      <Action
-                        label="Åpne aktiv trening"
-                        icon="fitness"
-                        onPress={() =>
-                          navigation.popTo("Main", { screen: "Form" })
-                        }
-                      />
-                    </>
-                  ) : (
-                    <Action
-                      label={working ? "Starter …" : "Start løpetur"}
-                      icon="play"
-                      disabled={
-                        working || journal.loading || !journal.available
-                      }
-                      onPress={() => void start()}
-                    />
-                  )}
                   <Text style={{ color: muted, fontSize: 12, lineHeight: 18 }}>
                     {gps
                       ? "Tillat posisjon når du starter. GPS krever at appen er åpen; ingen bakgrunnssporing."

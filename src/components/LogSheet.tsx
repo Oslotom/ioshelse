@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -32,6 +33,16 @@ export function LogSheet({
     theme = useVitalTheme(),
     insets = useSafeAreaInsets(),
     reduce = useReduceMotion();
+  const opening = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!visible) return;
+    opening.setValue(reduce ? 1 : 0);
+    Animated.timing(opening, {
+      toValue: 1,
+      duration: reduce ? 0 : 260,
+      useNativeDriver: true,
+    }).start();
+  }, [visible, reduce, opening]);
   const [page, setPage] = useState<SheetPage>("menu"),
     [activity, setActivity] = useState<WorkoutType>("Gåtur"),
     [note, setNote] = useState(""),
@@ -115,7 +126,7 @@ export function LogSheet({
     <Modal
       visible={visible}
       transparent
-      animationType={reduce ? "none" : "slide"}
+      animationType={reduce ? "none" : "fade"}
       onRequestClose={() => {
         if (!disabled) onClose();
       }}
@@ -136,13 +147,22 @@ export function LogSheet({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "#00000055",
+            backgroundColor: "#17232D55",
           }}
         />
-        <View
+        <Animated.View
           accessibilityViewIsModal
           style={{
-            backgroundColor: theme.card,
+            backgroundColor: theme.background,
+            overflow: "hidden",
+            transform: [
+              {
+                translateY: opening.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [360, 0],
+                }),
+              },
+            ],
             borderTopLeftRadius: 30,
             borderTopRightRadius: 30,
             maxHeight: "92%",
@@ -161,6 +181,7 @@ export function LogSheet({
             }}
           />
           <ScrollView
+            style={{ backgroundColor: theme.background }}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ padding: 24, gap: 20 }}
           >
@@ -259,7 +280,7 @@ export function LogSheet({
                       gap: 15,
                       padding: 18,
                       borderRadius: 20,
-                      backgroundColor: theme.track,
+                      backgroundColor: theme.card,
                       opacity: pressed ? 0.7 : 1,
                     })}
                   >
@@ -355,7 +376,7 @@ export function LogSheet({
               </>
             )}
           </ScrollView>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );
