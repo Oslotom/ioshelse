@@ -17,7 +17,6 @@ test("empty journal has zero known registrations but no invented form or glucose
   const result = journalStats([], now);
   assert.equal(result.todayCount, 0);
   assert.equal(result.formAverage, undefined);
-  assert.equal(result.latestGlucose, undefined);
   assert.equal(result.workoutCount, 0);
 });
 test("form average uses observed entries in seven calendar days, excluding future and older entries", () => {
@@ -34,7 +33,7 @@ test("form average uses observed entries in seven calendar days, excluding futur
   assert.equal(result.formCount, 2);
   assert.equal(result.todayCount, 1);
 });
-test("latest glucose is selected by timestamp, not array order or numeric value", () => {
+test("legacy removed measurements are excluded from visible statistics", () => {
   const glucose = (id: string, date: Date, value: number): JournalEntry => ({
     id,
     date: date.toISOString(),
@@ -51,8 +50,7 @@ test("latest glucose is selected by timestamp, not array order or numeric value"
     ],
     now,
   );
-  assert.equal(result.latestGlucose?.id, "latest");
-  assert.equal(result.latestGlucose?.value, 5.2);
+  assert.equal(result.todayCount, 0);
 });
 test("completed workout time is clipped at the seven-day boundary", () => {
   const from = new Date(+start - 30 * 60000),

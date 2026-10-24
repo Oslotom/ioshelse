@@ -19,7 +19,7 @@ test("demo journal covers fourteen unique local dates with valid fictional recor
   assert.equal(new Set(daily.map((entry) => entry.day)).size, 14);
   assert.equal(daily[0]!.day, dayKey(addDays(now, -13)));
   assert.equal(daily.at(-1)!.day, dayKey(now));
-  assert.equal(journal.entries.filter((entry) => entry.kind === "glucose").length, 14);
+  assert.equal(journal.entries.filter((entry) => entry.kind === "glucose").length, 0);
   assert.equal(journal.entries.filter((entry) => entry.kind === "workout").length, 7);
   assert.deepEqual(decodeJournal(JSON.stringify(journal)), journal);
   assert.deepEqual(makeDemoJournal(now), journal);

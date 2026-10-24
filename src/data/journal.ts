@@ -13,7 +13,8 @@ export const workoutTypes = [
   "Styrke",
   "Annet",
 ] as const;
-export const glucoseContexts = [
+// Legacy decoding only: retained so old local journals remain readable.
+const glucoseContexts = [
   "Ikke angitt",
   "Fastende",
   "Før måltid",
@@ -51,16 +52,6 @@ export type Journal = {
 export const emptyJournal = (): Journal => ({ version: 1, entries: [] });
 export const makeLogId = () =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-export function glucoseValue(input: string) {
-  if (!/^\d+(?:[.,]\d{1,2})?$/.test(input.trim()))
-    throw new Error(
-      "Oppgi blodsukker i mmol/L, for eksempel 5,6. Bruk opptil to desimaler.",
-    );
-  const value = Number(input.trim().replace(",", "."));
-  if (!Number.isFinite(value) || value <= 0 || value > 1000)
-    throw new Error("Oppgi en gyldig positiv måling i mmol/L.");
-  return value;
-}
 function validDate(value: unknown): value is string {
   return typeof value === "string" && Number.isFinite(Date.parse(value));
 }

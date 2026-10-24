@@ -1,11 +1,11 @@
 import { dailyEntries, dailyScore, dayKey } from "./daily-form";
-import { FormEntry, GlucoseEntry, JournalEntry } from "./journal";
+import { FormEntry, JournalEntry } from "./journal";
 import { addDays, startOfDay } from "./models";
 
 export function journalStats(entries: JournalEntry[], now = new Date()) {
   const today = startOfDay(now),
     start = addDays(today, -6);
-  const available = entries.filter((entry) => +new Date(entry.date) <= +now);
+  const available = entries.filter((entry) => entry.kind !== "glucose" && +new Date(entry.date) <= +now);
   const newForms = dailyEntries(available).filter(
     (entry) => entry.day >= dayKey(start) && entry.day <= dayKey(now),
   );
@@ -30,12 +30,6 @@ export function journalStats(entries: JournalEntry[], now = new Date()) {
       workoutCount++;
     }
   }
-  const glucose = available
-    .filter((entry): entry is GlucoseEntry => entry.kind === "glucose")
-    .reduce<GlucoseEntry | undefined>(
-      (latest, entry) => (!latest || entry.date > latest.date ? entry : latest),
-      undefined,
-    );
   return {
     todayCount: available.filter((entry) => new Date(entry.date) >= today)
       .length,
@@ -50,6 +44,5 @@ export function journalStats(entries: JournalEntry[], now = new Date()) {
     dailyFormCount: newForms.length,
     workoutSeconds,
     workoutCount,
-    latestGlucose: glucose,
   };
 }

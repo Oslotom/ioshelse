@@ -190,7 +190,7 @@ export const DailyFormDashboard = React.memo(function DailyFormDashboard() {
         added = incoming.filter((entry) => !existing.has(entry.day)).length;
       Alert.alert(
         "Importer dagsform?",
-        `${added} nye datoer legges til. ${incoming.length - added} eksisterende datoer beholdes uendret. Trening, blodsukker og eldre logger påvirkes ikke.`,
+        `${added} nye datoer legges til. ${incoming.length - added} eksisterende datoer beholdes uendret. Trening og eldre logger påvirkes ikke.`,
         [
           { text: "Avbryt", style: "cancel" },
           {

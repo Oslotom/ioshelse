@@ -58,11 +58,10 @@ Bunnmenyen har **Oversikt · Aktivitet · + · Søvn · Form**. Plussknappen åp
 
 - **Dagens form**: ett samlet skjema med seks sliders (1–10), åtte symptomvalg og notat. Dato settes automatisk; dagens registrering kan redigeres.
 - **Start trening**: velg Gåtur, Løping, Sykling, Styrke eller Annet og start tidtaking. Den pågående økten vises i Form og kan avsluttes og lagres eller forkastes. Starttidspunktet lagres, slik at tiden inkluderer bakgrunn og omstart. Dette er tidtaking uten GPS, puls eller kaloriberegning.
-- **Logg blodsukker**: manuelt innlagt måleverdi i mmol/L, tidspunkt, måltidssituasjon og valgfritt notat. Desimalkomma støttes. Appen måler eller tolker ikke blodsukker.
 
-Oversikt viser øverst fire KPI-kort: registreringer i dag, snittform fra registrerte egenvurderinger siste sju kalenderdager, avsluttet treningstid i samme periode og sist manuelt loggede blodsukker med opprinnelig tidspunkt. Framtidige logger og pågående trening telles ikke med. Økter som krysser periodegrensen teller bare tiden innenfor perioden. Manglende data vises uten oppdiktede verdier. Kortene bruker hele journalen, uavhengig av historikkfilteret.
+Oversikt viser øverst tre KPI-kort: registreringer i dag, snittform fra registrerte egenvurderinger siste sju kalenderdager, avsluttet treningstid i samme periode. Framtidige logger og pågående trening telles ikke med. Økter som krysser periodegrensen teller bare tiden innenfor perioden. Manglende data vises uten oppdiktede verdier. Kortene bruker hele journalen, uavhengig av historikkfilteret.
 
-Form viser kronologisk historikk med filtre for form, trening og blodsukker. Etter lagring åpnes Form. Enkelte registreringer kan slettes etter bekreftelse. Egne logger er adskilt fra både demodata, HealthKit og importert skritthistorikk; de skrives ikke til Apple Helse. Kun én treningsklokke kan være aktiv. Doble lagringsforespørsler med samme ID gir ikke duplikater.
+Form viser kronologisk historikk med filtre for form og trening. Etter lagring åpnes Form. Enkelte registreringer kan slettes etter bekreftelse. Egne logger er adskilt fra både demodata, HealthKit og importert skritthistorikk; de skrives ikke til Apple Helse. Kun én treningsklokke kan være aktiv. Doble lagringsforespørsler med samme ID gir ikke duplikater.
 
 Journalen lagres lokalt med AsyncStorage under en egen nøkkel og leses uten å blokkere appens oppstart. Endringer lagres sekvensielt før visningen oppdateres; feil eller ugyldig lagring erstattes ikke automatisk med en tom logg. Maksimalt 10 000 registreringer og 500 tegn per notat. Tester dekker verdier, tidsregning, omstart av økter, samtidige lagringer, feil og databevaring. På fysisk iPhone må du kontrollere plussmeny, tastatur, dato-/tidsvalg, VoiceOver, lagring/omstart, bakgrunnsøkter og sletting.
 
@@ -70,7 +69,7 @@ Journalen lagres lokalt med AsyncStorage under en egen nøkkel og leses uten å 
 
 Åpne **+ → Dagens form**, eller **Registrer/Rediger dagens form** på Oversikt/Form. Skjemaet har Energi, Søvnkvalitet, Humør, Stress, Kroppslig form og Mage og fordøyelse på skala 1–10, alle symptomchips og feltet **Hvordan har du det i dag?** samlet i samme bottom sheet. Sliders oppdaterer verdien straks; stress får motsatt fargeretning av de andre. Ny registrering starter med synlige standardverdier på 5; disse lagres først når brukeren bekrefter hele skjemaet. Knappen er **Lagre dagens form**, med en kort lagringsbekreftelse.
 
-Én ny dagsform per ISO-kalenderdato (`YYYY-MM-DD`). Lagring på samme dato oppdaterer hele oppføringen og bevarer ID/opprettet-tid. Tidligere dager åpnes/redigeres fra månedskalenderen eller logghistorikken. Registreringene ligger i eksisterende lokaljournal som egen type `dailyForm`, med seks strukturerte målinger, symptomer, notat, dato og ISO-tidsstempler. Eldre `form`-logger på 1–5 beholdes uendret og vises som tidligere vurderinger; de får aldri oppdiktede seks målinger og inngår ikke i den nye analysen. Trening, blodsukker og aktiv økt beholdes.
+Én ny dagsform per ISO-kalenderdato (`YYYY-MM-DD`). Lagring på samme dato oppdaterer hele oppføringen og bevarer ID/opprettet-tid. Tidligere dager åpnes/redigeres fra månedskalenderen eller logghistorikken. Registreringene ligger i eksisterende lokaljournal som egen type `dailyForm`, med seks strukturerte målinger, symptomer, notat, dato og ISO-tidsstempler. Eldre `form`-logger på 1–5 beholdes uendret og vises som tidligere vurderinger; de får aldri oppdiktede seks målinger og inngår ikke i den nye analysen. Trening og aktiv økt beholdes.
 
 Oversikt og Form viser dagens seks verdier, symptomer, notat og avvik fra snittet av registrerte dager i de sju foregående kalenderdagene. Formscore er `(energi + søvnkvalitet + humør + (11 − stress) + kroppslig form + fordøyelse) / 6`, skala 1–10. Alle vektes likt. Dette er en subjektiv indikator og ingen medisinsk vurdering. KPI-kortet for snittform bruker nye dagsformer når slike finnes i perioden; ellers merkes eventuelle eldre 1–5-vurderinger separat.
 
@@ -161,7 +160,8 @@ På enheten: kontroller alle faner, diagramvalg, periodeskifte, mål, miles/km, 
 EAS-bygg og faktisk HealthKit-tilgang er ikke kjørt i skyarbeidsområdet. Expo-domener må være tilgjengelige og Expo-/Apple-tilgang må brukes gjennom de offisielle innloggingsflytene. Ikke legg nøkler i kildekoden.
 
 Demomodus («Innstillinger → Bruk demodata») inkluderer også 14 dager med
-seks daglige formvurderinger, symptomer og notater, daglige fiktive
-blodsukkerverdier og sju eksempeløkter. Disse loggene bruker en egen lokal
+seks daglige formvurderinger, symptomer og notater, samt sju eksempeløkter. Disse loggene bruker en egen lokal
 lagringsnøkkel (`vital.demo-journal.v1`); egne logger blir verken erstattet
 eller blandet med eksemplene. Endringer i demomodus gjelder bare demoen.
+
+Blodsukkerfunksjonen er fjernet fra appen. Den eldre datatypen støttes bare ved lesing av eksisterende lokaljournal, slik at gamle data ikke gjør journalen uleselig. Disse oppføringene vises ikke eller telles i statistikken.

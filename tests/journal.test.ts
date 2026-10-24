@@ -8,7 +8,6 @@ import {
   elapsedSeconds,
   emptyJournal,
   finishWorkout,
-  glucoseValue,
   JournalEntry,
 } from "../src/data/journal";
 const form = (id: string, date = "2026-10-24T12:00:00.000Z"): JournalEntry => ({
@@ -17,21 +16,6 @@ const form = (id: string, date = "2026-10-24T12:00:00.000Z"): JournalEntry => ({
   kind: "form",
   rating: 4,
   note: "God energi",
-});
-test("Norwegian decimal glucose input is normalized without changing units", () => {
-  assert.equal(glucoseValue("5,6"), 5.6);
-  assert.equal(glucoseValue(" 6.25 "), 6.25);
-  for (const invalid of [
-    "",
-    "0",
-    "-1",
-    "5,555",
-    "NaN",
-    "5 mmol/L",
-    "Infinity",
-    "1e3",
-  ])
-    assert.throws(() => glucoseValue(invalid));
 });
 test("form and glucose entries validate and sort chronologically without demo data", () => {
   const state = addEntry(addEntry(emptyJournal(), form("first")), {

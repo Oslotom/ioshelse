@@ -24,11 +24,7 @@ export function makeDemoJournal(now = new Date()): Journal {
         : i % 4 === 0 ? ["Oppblåst mage"] : i % 5 === 0 ? ["Stivhet eller smerter"] : [],
       note: ["Eksempel: rolig dag og litt lite overskudd.", "Eksempel: god søvn og en fin tur.", "Eksempel: mer energi i dag."][i % 3]!,
     };
-    entries.push(daily, {
-      id: `demo-glucose-${day}`, kind: "glucose", date: stamp,
-      value: [5.1, 5.4, 4.9, 5.6, 5.2, 5.0, 5.3][i % 7]!,
-      context: "Fastende", note: "Fiktiv eksempelverdi, ikke en måling.",
-    });
+    entries.push(daily);
     if (i % 2 === 0) {
       const seconds = (25 + (i % 4) * 10) * 60;
       entries.push({ id: `demo-workout-${day}`, kind: "workout", date: stamp,

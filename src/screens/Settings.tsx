@@ -330,7 +330,7 @@ export function Settings() {
           onChange={(value) => void setDemo(value)}
         />
         <Copy small>
-          Inkluderer to uker med dagsform, symptomer, notater, blodsukker og treningsøkter, samt skritt, puls og søvn. Alt er fiktive eksempler. Egne logger og Apple Helse endres ikke.
+          Inkluderer to uker med dagsform, symptomer, notater og treningsøkter, samt skritt, puls og søvn. Alt er fiktive eksempler. Egne logger og Apple Helse endres ikke.
         </Copy>
       </Card>
       <Card>

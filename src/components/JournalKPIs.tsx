@@ -20,7 +20,6 @@ export function JournalKPIs({
     stats = journalStats(entries);
   const known = ready && !loading;
   const missing = loading ? "Laster …" : !ready ? "Ikke lastet" : "Ingen data";
-  const latest = stats.latestGlucose;
   const items = [
     {
       title: "Logger i dag",
@@ -63,23 +62,6 @@ export function JournalKPIs({
       detail: known
         ? `${stats.workoutCount} avsluttede økter · 7 dager`
         : missing,
-    },
-    {
-      title: "Siste blodsukker",
-      icon: "water-outline" as const,
-      color: theme.coral,
-      value: known && latest ? number(latest.value, 2) : "–",
-      unit: "mmol/L",
-      detail:
-        known && latest
-          ? new Date(latest.date).toLocaleString("nb-NO", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : missing,
     },
   ];
   return (
@@ -145,8 +127,6 @@ export function JournalKPIs({
       </View>
       <Copy small>
         Basert på dine egne logger. Pågående treningsøkter er ikke medregnet.
-        Blodsukkerverdien er manuelt registrert og vises med sitt opprinnelige
-        tidspunkt.
       </Copy>
     </View>
   );

@@ -34,7 +34,7 @@ export function FormScreen() {
     { preferences } = useHealth(),
     theme = useVitalTheme();
   const [filter, setFilter] = useState<
-      "Alle" | "Form" | "Trening" | "Blodsukker"
+      "Alle" | "Form" | "Trening"
     >("Alle"),
     [now, setNow] = useState(new Date()),
     [actionError, setActionError] = useState<string>(),
@@ -46,12 +46,11 @@ export function FormScreen() {
     return () => clearInterval(timer);
   }, [journal.data.active?.id]);
   const entries = journal.data.entries.filter(
-    (entry) =>
+    (entry) => entry.kind !== "glucose" && (
       filter === "Alle" ||
       (filter === "Form" &&
         (entry.kind === "form" || entry.kind === "dailyForm")) ||
-      (filter === "Trening" && entry.kind === "workout") ||
-      (filter === "Blodsukker" && entry.kind === "glucose"),
+      (filter === "Trening" && entry.kind === "workout")),
   );
   async function finish() {
     setActionError(undefined);
@@ -172,8 +171,7 @@ export function FormScreen() {
                 color={theme.mint}
               />
               <Copy>
-                Bruk + i bunnmenyen for å logge form, starte trening eller
-                registrere blodsukker.
+                Bruk + i bunnmenyen for å logge form eller starte trening.
               </Copy>
               <Copy small>
                 Dette er dine egne registreringer. De lagres lokalt og skrives
@@ -187,7 +185,7 @@ export function FormScreen() {
               accessibilityRole="tablist"
               style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}
             >
-              {(["Alle", "Form", "Trening", "Blodsukker"] as const).map(
+              {(["Alle", "Form", "Trening"] as const).map(
                 (value) => (
                   <Pressable
                     key={value}
@@ -252,23 +250,17 @@ export function FormScreen() {
                 text={
                   item.kind === "form" || item.kind === "dailyForm"
                     ? "Dagens form"
-                    : item.kind === "glucose"
-                      ? "Blodsukker"
-                      : item.activity
+                    : item.kind === "workout" ? item.activity : ""
                 }
                 icon={
                   item.kind === "form" || item.kind === "dailyForm"
                     ? "happy-outline"
-                    : item.kind === "glucose"
-                      ? "water-outline"
-                      : "fitness-outline"
+                    : "fitness-outline"
                 }
                 color={
                   item.kind === "form" || item.kind === "dailyForm"
                     ? theme.mint
-                    : item.kind === "glucose"
-                      ? theme.coral
-                      : theme.orange
+                    : theme.orange
                 }
               />
               <Pressable
@@ -292,9 +284,7 @@ export function FormScreen() {
                 ? `${number(dailyScore(item), 1)} / 10`
                 : item.kind === "form"
                   ? formLabels[item.rating - 1]
-                  : item.kind === "glucose"
-                    ? `${number(item.value, 2)} mmol/L`
-                    : timerLabel(item.seconds)}
+                  : item.kind === "workout" ? timerLabel(item.seconds) : ""}
             </Text>
             <Copy small>
               {item.kind === "dailyForm"
@@ -311,14 +301,6 @@ export function FormScreen() {
                     minute: "2-digit",
                   })}
             </Copy>
-            {item.kind === "glucose" && (
-              <Copy small>
-                {item.context === "Ikke angitt"
-                  ? "Måltidssituasjon ikke angitt"
-                  : item.context}{" "}
-                · manuelt registrert måling
-              </Copy>
-            )}
             {item.kind === "dailyForm" && (
               <>
                 <Copy small>Subjektiv formscore · seks målinger</Copy>
