@@ -165,3 +165,26 @@ lagringsnøkkel (`vital.demo-journal.v1`); egne logger blir verken erstattet
 eller blandet med eksemplene. Endringer i demomodus gjelder bare demoen.
 
 Blodsukkerfunksjonen er fjernet fra appen. Den eldre datatypen støttes bare ved lesing av eksisterende lokaljournal, slik at gamle data ikke gjør journalen uleselig. Disse oppføringene vises ikke eller telles i statistikken.
+
+### Løpeturer
+
+Trykk **+ → Start løpetur** for den lyse løpevisningen. Startsiden har GPS-valg,
+forhåndsvisning av posisjon og et valgfritt notat. Underveis vises aktiv tid,
+GPS-distanse og gjennomsnittstempo, med pause/fortsett og avslutt/lagre. En aktiv
+løpetur kan åpnes igjen fra +-menyen eller Form. Etter lagring vises rute og
+øktdetaljer; tidligere økter åpnes fra **Form → Trening → Se løpetur**.
+
+`expo-location` bruker bare posisjonstilgang mens appen er i forgrunnen. Ingen
+bakgrunnstillatelse eller Apple Developer-konto kreves for Expo Go. Tidtaking
+fortsetter i bakgrunnen, men GPS stoppes: gjenopptatt sporing blir et nytt
+rutesegment, uten oppdiktede forbindelser eller distanse over hullene. Distanse
+og tempo kan derfor være ufullstendige. Uten GPS vises bare tidtaking.
+Kartet bruker `react-native-maps` med lys kartstil. Ingen kalorier eller
+høydemeter estimeres.
+
+Rute og pauseinformasjon lagres med økten i den lokale journalen. Aktiv økt
+bevares ved omstart. Punkter med dårlig presisjon, duplikater og urimelige
+hastighetssprang avvises. Opptil 10 000 GPS-punkter per økt lagres; tidtaking
+fortsetter dersom grensen nås. Demomodus beholder sin separate journal.
+GPS, kart og tillatelsesflyt må prøves på fysisk iPhone; skyverifisering dekker
+beregninger, lagring, typekontroll og iOS-bundling.

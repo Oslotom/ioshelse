@@ -1,3 +1,5 @@
+import { RunningScreen } from "./screens/Running";
+import { RunTrackingProvider } from "./data/run-tracking";
 import React, { useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -27,7 +29,8 @@ import { LogSheet } from "./components/LogSheet";
 import { SleepScreen } from "./screens/Sleep";
 import { Onboarding, Settings } from "./screens/Settings";
 
-type StackParams = {
+export type StackParams = {
+  Run: { id?: string } | undefined;
   Main: NavigatorScreenParams<TabParams> | undefined;
   Steps: undefined;
   Heart: undefined;
@@ -150,9 +153,21 @@ function Tabs({ navigation }: NativeStackScreenProps<StackParams, "Main">) {
           }}
         />
         <Tab.Screen name="Søvn" component={SleepScreen} />
-        <Tab.Screen name="Form" component={FormScreen} />
+        <Tab.Screen name="Form">
+          {() => (
+            <FormScreen
+              onRun={(id) =>
+                navigation.navigate("Run", id ? { id } : undefined)
+              }
+            />
+          )}
+        </Tab.Screen>
       </Tab.Navigator>
       <LogSheet
+        onRun={() => {
+          setLogOpen(false);
+          navigation.navigate("Run");
+        }}
         visible={logOpen}
         onClose={() => setLogOpen(false)}
         onSaved={() => {
@@ -219,6 +234,11 @@ function Root() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="Run"
+              component={RunningScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="Settings"
               component={Settings}
               options={{ title: "Innstillinger" }}
@@ -249,7 +269,9 @@ export default function App() {
     <SafeAreaProvider>
       <HealthProvider>
         <JournalProvider>
-          <Root />
+          <RunTrackingProvider>
+            <Root />
+          </RunTrackingProvider>
         </JournalProvider>
       </HealthProvider>
     </SafeAreaProvider>

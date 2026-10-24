@@ -1,3 +1,4 @@
+import { addRunPoint, toggleRunPause, RunPoint } from "./running";
 import React, {
   createContext,
   useCallback,
@@ -29,12 +30,15 @@ function useJournalModel(demo: boolean) {
       getItem: (key) =>
         withDeadline(
           demo
-            ? AsyncStorage.getItem("vital.demo-journal.v1").then((raw) => raw ?? JSON.stringify(makeDemoJournal()))
+            ? AsyncStorage.getItem("vital.demo-journal.v1").then(
+                (raw) => raw ?? JSON.stringify(makeDemoJournal()),
+              )
             : AsyncStorage.getItem(key),
           5000,
           "Loggen bruker for lang tid på å åpne. Registreringene er beholdt.",
         ),
-      setItem: (key, value) => AsyncStorage.setItem(demo ? "vital.demo-journal.v1" : key, value),
+      setItem: (key, value) =>
+        AsyncStorage.setItem(demo ? "vital.demo-journal.v1" : key, value),
     }),
   ).current;
   const [data, setData] = useState<Journal>(emptyJournal),
@@ -116,6 +120,34 @@ function useJournalModel(demo: boolean) {
     save: (entry: JournalEntry) => mutate((state) => addEntry(state, entry)),
     start: (active: ActiveWorkout) =>
       mutate((state) => beginWorkout(state, active)),
+    recordRunPoint: (
+      id: string,
+      point: Omit<RunPoint, "segment">,
+      newSegment: boolean,
+    ) =>
+      mutate((state) =>
+        state.active?.id === id && state.active.run
+          ? {
+              ...state,
+              active: {
+                ...state.active,
+                run: addRunPoint(state.active.run, point, newSegment),
+              },
+            }
+          : state,
+      ),
+    pauseRun: () =>
+      mutate((state) =>
+        state.active?.run
+          ? {
+              ...state,
+              active: {
+                ...state.active,
+                run: toggleRunPause(state.active.run),
+              },
+            }
+          : state,
+      ),
     finish: () => mutate((state) => finishWorkout(state)),
     discard: () =>
       mutate((state) => {
@@ -132,9 +164,22 @@ function useJournalModel(demo: boolean) {
 const Context = createContext<ReturnType<typeof useJournalModel> | null>(null);
 export function JournalProvider({ children }: { children: React.ReactNode }) {
   const { preferences } = useHealth();
-  return <JournalModeProvider key={preferences.demo ? "demo" : "personal"} demo={preferences.demo}>{children}</JournalModeProvider>;
+  return (
+    <JournalModeProvider
+      key={preferences.demo ? "demo" : "personal"}
+      demo={preferences.demo}
+    >
+      {children}
+    </JournalModeProvider>
+  );
 }
-function JournalModeProvider({ children, demo }: { children: React.ReactNode; demo: boolean }) {
+function JournalModeProvider({
+  children,
+  demo,
+}: {
+  children: React.ReactNode;
+  demo: boolean;
+}) {
   const model = useJournalModel(demo);
   return <Context.Provider value={model}>{children}</Context.Provider>;
 }

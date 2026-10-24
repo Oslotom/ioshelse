@@ -1,3 +1,4 @@
+import { runSeconds } from "../data/running";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -29,13 +30,11 @@ import {
   useVitalTheme,
 } from "../components/UI";
 
-export function FormScreen() {
+export function FormScreen({ onRun }: { onRun: (id?: string) => void }) {
   const journal = useJournal(),
     { preferences } = useHealth(),
     theme = useVitalTheme();
-  const [filter, setFilter] = useState<
-      "Alle" | "Form" | "Trening"
-    >("Alle"),
+  const [filter, setFilter] = useState<"Alle" | "Form" | "Trening">("Alle"),
     [now, setNow] = useState(new Date()),
     [actionError, setActionError] = useState<string>(),
     [editDay, setEditDay] = useState<string>();
@@ -46,11 +45,12 @@ export function FormScreen() {
     return () => clearInterval(timer);
   }, [journal.data.active?.id]);
   const entries = journal.data.entries.filter(
-    (entry) => entry.kind !== "glucose" && (
-      filter === "Alle" ||
-      (filter === "Form" &&
-        (entry.kind === "form" || entry.kind === "dailyForm")) ||
-      (filter === "Trening" && entry.kind === "workout")),
+    (entry) =>
+      entry.kind !== "glucose" &&
+      (filter === "Alle" ||
+        (filter === "Form" &&
+          (entry.kind === "form" || entry.kind === "dailyForm")) ||
+        (filter === "Trening" && entry.kind === "workout")),
   );
   async function finish() {
     setActionError(undefined);
@@ -112,7 +112,12 @@ export function FormScreen() {
         ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
         ListHeaderComponent={
           <View style={{ gap: 20, marginBottom: 20 }}>
-            {preferences.demo && <Copy>Demomodus · fiktive eksempeldata. Egne registreringer vises når du slår av demomodus.</Copy>}
+            {preferences.demo && (
+              <Copy>
+                Demomodus · fiktive eksempeldata. Egne registreringer vises når
+                du slår av demomodus.
+              </Copy>
+            )}
             {journal.data.active && (
               <Card>
                 <Title
@@ -129,19 +134,33 @@ export function FormScreen() {
                   }}
                 >
                   {timerLabel(
-                    elapsedSeconds(journal.data.active.startedAt, now),
+                    journal.data.active.run
+                      ? runSeconds(
+                          journal.data.active.startedAt,
+                          journal.data.active.run,
+                          now,
+                        )
+                      : elapsedSeconds(journal.data.active.startedAt, now),
                   )}
                 </Text>
                 <Row label="Aktivitet" value={journal.data.active.activity} />
                 <Copy small>
                   Startet {dateLabel(journal.data.active.startedAt, true)} ·
-                  tidtaking uten GPS
+                  {journal.data.active.run ? "løpetur" : "tidtaking uten GPS"}
                 </Copy>
-                <Button
-                  label={journal.busy ? "Lagrer …" : "Avslutt og lagre økten"}
-                  onPress={() => void finish()}
-                  disabled={journal.busy}
-                />
+                {journal.data.active.run ? (
+                  <Button label="Åpne aktiv løpetur" onPress={() => onRun()} />
+                ) : (
+                  <>
+                    <Button
+                      label={
+                        journal.busy ? "Lagrer …" : "Avslutt og lagre økten"
+                      }
+                      onPress={() => void finish()}
+                      disabled={journal.busy}
+                    />
+                  </>
+                )}
                 <Button
                   label="Forkast økten"
                   secondary
@@ -185,32 +204,29 @@ export function FormScreen() {
               accessibilityRole="tablist"
               style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}
             >
-              {(["Alle", "Form", "Trening"] as const).map(
-                (value) => (
-                  <Pressable
-                    key={value}
-                    accessibilityRole="tab"
-                    accessibilityState={{ selected: filter === value }}
-                    onPress={() => setFilter(value)}
+              {(["Alle", "Form", "Trening"] as const).map((value) => (
+                <Pressable
+                  key={value}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: filter === value }}
+                  onPress={() => setFilter(value)}
+                  style={{
+                    backgroundColor: filter === value ? theme.mint : theme.card,
+                    paddingVertical: 11,
+                    paddingHorizontal: 15,
+                    borderRadius: 13,
+                  }}
+                >
+                  <Text
                     style={{
-                      backgroundColor:
-                        filter === value ? theme.mint : theme.card,
-                      paddingVertical: 11,
-                      paddingHorizontal: 15,
-                      borderRadius: 13,
+                      color: filter === value ? "#062C26" : theme.text,
+                      fontWeight: "500",
                     }}
                   >
-                    <Text
-                      style={{
-                        color: filter === value ? "#062C26" : theme.text,
-                        fontWeight: "500",
-                      }}
-                    >
-                      {value}
-                    </Text>
-                  </Pressable>
-                ),
-              )}
+                    {value}
+                  </Text>
+                </Pressable>
+              ))}
             </View>
           </View>
         }
@@ -250,7 +266,9 @@ export function FormScreen() {
                 text={
                   item.kind === "form" || item.kind === "dailyForm"
                     ? "Dagens form"
-                    : item.kind === "workout" ? item.activity : ""
+                    : item.kind === "workout"
+                      ? item.activity
+                      : ""
                 }
                 icon={
                   item.kind === "form" || item.kind === "dailyForm"
@@ -284,7 +302,9 @@ export function FormScreen() {
                 ? `${number(dailyScore(item), 1)} / 10`
                 : item.kind === "form"
                   ? formLabels[item.rating - 1]
-                  : item.kind === "workout" ? timerLabel(item.seconds) : ""}
+                  : item.kind === "workout"
+                    ? timerLabel(item.seconds)
+                    : ""}
             </Text>
             <Copy small>
               {item.kind === "dailyForm"
@@ -301,6 +321,13 @@ export function FormScreen() {
                     minute: "2-digit",
                   })}
             </Copy>
+            {item.kind === "workout" && item.activity === "Løping" && (
+              <Button
+                label="Se løpetur"
+                secondary
+                onPress={() => onRun(item.id)}
+              />
+            )}
             {item.kind === "dailyForm" && (
               <>
                 <Copy small>Subjektiv formscore · seks målinger</Copy>

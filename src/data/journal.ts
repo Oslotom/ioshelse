@@ -1,3 +1,4 @@
+import { RunData, validateRun, finalRun } from "./running";
 import { DailyFormEntry, validateDaily } from "./daily-form";
 export const formLabels = [
   "Svært dårlig",
@@ -35,10 +36,15 @@ export type WorkoutEntry = BaseEntry & {
   startedAt: string;
   endedAt: string;
   seconds: number;
+  run?: RunData;
 };
 export type JournalEntry =
-  FormEntry | DailyFormEntry | GlucoseEntry | WorkoutEntry;
+  | FormEntry
+  | DailyFormEntry
+  | GlucoseEntry
+  | WorkoutEntry;
 export type ActiveWorkout = {
+  run?: RunData;
   id: string;
   startedAt: string;
   activity: WorkoutType;
@@ -59,6 +65,7 @@ function validNote(value: unknown): value is string {
   return typeof value === "string" && value.length <= 500;
 }
 export function validateEntry(entry: JournalEntry) {
+  if (entry.kind === "workout" && entry.run) validateRun(entry.run);
   if (
     typeof entry.id !== "string" ||
     !entry.id ||
@@ -123,6 +130,7 @@ export function decodeJournal(raw: string | null): Journal {
       if (ids.has(entry.id)) throw new Error();
       ids.add(entry.id);
     });
+    if (value.active?.run) validateRun(value.active.run);
     if (
       value.active &&
       (!value.active.id ||
@@ -200,6 +208,7 @@ export function upsertDailyForm(
   };
 }
 export function beginWorkout(state: Journal, active: ActiveWorkout): Journal {
+  if (active.run) validateRun(active.run);
   if (state.active)
     throw new Error(
       "Du har allerede en pågående treningsøkt. Avslutt den i Form først.",
@@ -228,6 +237,7 @@ export function finishWorkout(state: Journal, now = new Date()): Journal {
     startedAt: active.startedAt,
     endedAt: now.toISOString(),
     seconds,
+    ...(active.run ? { run: finalRun(active.run, now) } : {}),
   });
   const { active: _, ...finished } = next;
   return finished;

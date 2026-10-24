@@ -53,7 +53,13 @@
         }
       ],
       "expo-sqlite",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "VITAL bruker posisjonen din mens appen er åpen for å registrere løpeturens rute, distanse og tempo. Ruten lagres på telefonen."
+        }
+      ]
     ],
     "extra": {
       "eas": {

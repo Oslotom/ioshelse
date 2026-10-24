@@ -12,11 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useJournal } from "../data/journal-store";
-import {
-  makeLogId,
-  WorkoutType,
-  workoutTypes,
-} from "../data/journal";
+import { makeLogId, WorkoutType, workoutTypes } from "../data/journal";
 import { DailyFormFields } from "./DailyFormEditor";
 import { Button, Copy, Heading, useReduceMotion, useVitalTheme } from "./UI";
 
@@ -25,10 +21,12 @@ export function LogSheet({
   visible,
   onClose,
   onSaved,
+  onRun,
 }: {
   visible: boolean;
   onClose: () => void;
   onSaved: () => void;
+  onRun: () => void;
 }) {
   const journal = useJournal(),
     theme = useVitalTheme(),
@@ -211,6 +209,16 @@ export function LogSheet({
                 {(
                   [
                     {
+                      page: "run",
+                      title:
+                        journal.data.active?.activity === "Løping"
+                          ? "Åpne løpeturen"
+                          : "Start løpetur",
+                      description: "Rute, tid, distanse og tempo",
+                      icon: "walk-outline",
+                      color: theme.orange,
+                    },
+                    {
                       page: "form",
                       title: "Dagens form",
                       description: "Hvordan har du det i dag?",
@@ -234,6 +242,10 @@ export function LogSheet({
                     key={option.page}
                     accessibilityRole="button"
                     onPress={() => {
+                      if (option.page === "run") {
+                        onRun();
+                        return;
+                      }
                       if (option.page === "workout" && journal.data.active) {
                         onSaved();
                         return;
