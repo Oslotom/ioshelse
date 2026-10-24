@@ -16,7 +16,6 @@ import {
   timerLabel,
 } from "../data/journal";
 import { dateLabel, number } from "../data/models";
-import { JournalKPIs } from "../components/JournalKPIs";
 import { useHealth } from "../data/store";
 import {
   Button,
@@ -108,11 +107,6 @@ export function FormScreen() {
       ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
       ListHeaderComponent={
         <View style={{ gap: 20, marginBottom: 20 }}>
-          <JournalKPIs
-            entries={journal.data.entries}
-            ready={journal.available}
-            loading={journal.loading}
-          />
           <Card>
             <Title
               text="Din personlige logg"

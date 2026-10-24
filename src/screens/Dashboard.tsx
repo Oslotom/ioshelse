@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Haptics from "expo-haptics";
+import { useJournal } from "../data/journal-store";
+import { JournalKPIs } from "../components/JournalKPIs";
 import { useHealth } from "../data/store";
 import {
   addDays,
@@ -33,6 +35,7 @@ export type DashboardProps = {
   onSettings: () => void;
 };
 export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
+  const journal = useJournal();
   const { data, preferences, phoneOnly } = useHealth(),
     theme = useVitalTheme(),
     today = startOfDay(new Date()),
@@ -101,6 +104,11 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
           />
         </Pressable>
       </View>
+      <JournalKPIs
+        entries={journal.data.entries}
+        ready={journal.available}
+        loading={journal.loading}
+      />
       <Status />
       <Card onPress={onSteps} label="Se skritt og aktivitetsdetaljer">
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
