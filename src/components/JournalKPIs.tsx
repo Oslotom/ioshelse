@@ -35,13 +35,18 @@ export function JournalKPIs({
       icon: "happy-outline" as const,
       color: theme.lavender,
       value:
-        known && stats.formAverage !== undefined
-          ? number(stats.formAverage, 1)
+        known &&
+        (stats.dailyFormAverage !== undefined ||
+          stats.formAverage !== undefined)
+          ? number(stats.dailyFormAverage ?? stats.formAverage!, 1)
           : "–",
-      unit: "av 5",
+      unit:
+        stats.dailyFormCount || !stats.formCount
+          ? "av 10"
+          : "av 5 · eldre vurdering",
       detail:
-        known && stats.formCount
-          ? `${stats.formCount} vurderinger · 7 dager`
+        known && (stats.dailyFormCount || stats.formCount)
+          ? `${stats.dailyFormCount || stats.formCount} ${stats.dailyFormCount ? "dagsformer" : "eldre vurderinger"} · 7 dager`
           : known
             ? "Ingen vurderinger · 7 dager"
             : missing,

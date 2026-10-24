@@ -17,6 +17,8 @@ import {
   Journal,
   JournalEntry,
 } from "./journal";
+import { DailyFormEntry } from "./daily-form";
+import { mergeDailyBackup } from "./daily-backup";
 import { withDeadline } from "./startup";
 
 function useJournalModel() {
@@ -105,6 +107,8 @@ function useJournalModel() {
     busy,
     error,
     reload,
+    importDaily: (entries: DailyFormEntry[]) =>
+      mutate((state) => mergeDailyBackup(state, entries)),
     save: (entry: JournalEntry) => mutate((state) => addEntry(state, entry)),
     start: (active: ActiveWorkout) =>
       mutate((state) => beginWorkout(state, active)),

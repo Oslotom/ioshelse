@@ -1,3 +1,4 @@
+import { DailyFormEntry, validateDaily } from "./daily-form";
 export const formLabels = [
   "Svært dårlig",
   "Dårlig",
@@ -34,7 +35,8 @@ export type WorkoutEntry = BaseEntry & {
   endedAt: string;
   seconds: number;
 };
-export type JournalEntry = FormEntry | GlucoseEntry | WorkoutEntry;
+export type JournalEntry =
+  FormEntry | DailyFormEntry | GlucoseEntry | WorkoutEntry;
 export type ActiveWorkout = {
   id: string;
   startedAt: string;
@@ -74,6 +76,10 @@ export function validateEntry(entry: JournalEntry) {
     !validNote(entry.note)
   )
     throw new Error("Registreringen har ugyldig dato eller notat.");
+  if (entry.kind === "dailyForm") {
+    validateDaily(entry);
+    return;
+  }
   if (
     entry.kind === "form" &&
     Number.isInteger(entry.rating) &&
@@ -116,8 +122,13 @@ export function decodeJournal(raw: string | null): Journal {
     )
       throw new Error();
     const ids = new Set<string>();
+    const days = new Set<string>();
     value.entries.forEach((entry) => {
       validateEntry(entry);
+      if (entry.kind === "dailyForm") {
+        if (days.has(entry.day)) throw new Error();
+        days.add(entry.day);
+      }
       if (ids.has(entry.id)) throw new Error();
       ids.add(entry.id);
     });
@@ -147,6 +158,7 @@ export function timerLabel(seconds: number) {
 }
 export function addEntry(state: Journal, entry: JournalEntry): Journal {
   validateEntry(entry);
+  if (entry.kind === "dailyForm") return upsertDailyForm(state, entry);
   if (state.entries.some((row) => row.id === entry.id)) return state;
   if (state.entries.length >= 10000)
     throw new Error(
@@ -157,6 +169,43 @@ export function addEntry(state: Journal, entry: JournalEntry): Journal {
     entries: [entry, ...state.entries].sort((a, b) =>
       b.date.localeCompare(a.date),
     ),
+  };
+}
+export function upsertDailyForm(
+  state: Journal,
+  entry: DailyFormEntry,
+): Journal {
+  validateEntry(entry);
+  const existing = state.entries.find(
+    (row): row is DailyFormEntry =>
+      row.kind === "dailyForm" && row.day === entry.day,
+  );
+  const next = existing
+    ? {
+        ...entry,
+        id: existing.id,
+        date: existing.date,
+        createdAt: existing.createdAt,
+      }
+    : entry;
+  if (
+    state.entries.some(
+      (row) =>
+        row.id === next.id &&
+        !(row.kind === "dailyForm" && row.day === entry.day),
+    )
+  )
+    throw new Error("Registrerings-ID er allerede brukt av en annen logg.");
+  if (!existing && state.entries.length >= 10000)
+    throw new Error("Loggen er full. Slett eldre registreringer først.");
+  return {
+    ...state,
+    entries: [
+      next,
+      ...state.entries.filter(
+        (row) => !(row.kind === "dailyForm" && row.day === entry.day),
+      ),
+    ].sort((a, b) => b.date.localeCompare(a.date)),
   };
 }
 export function beginWorkout(state: Journal, active: ActiveWorkout): Journal {

@@ -3,6 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Haptics from "expo-haptics";
 import { useJournal } from "../data/journal-store";
+import { DailyFormOverview } from "../components/DailyFormOverview";
 import { JournalKPIs } from "../components/JournalKPIs";
 import {
   GraphFilter,
@@ -164,6 +165,7 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
         ready={journal.available}
         loading={journal.loading}
       />
+      <DailyFormOverview />
       <Status />
       <CollapsibleCard
         title={

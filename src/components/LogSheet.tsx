@@ -14,13 +14,13 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useJournal } from "../data/journal-store";
 import {
-  formLabels,
   glucoseContexts,
   glucoseValue,
   makeLogId,
   WorkoutType,
   workoutTypes,
 } from "../data/journal";
+import { DailyFormFields } from "./DailyFormEditor";
 import { Button, Copy, Heading, useReduceMotion, useVitalTheme } from "./UI";
 
 type SheetPage = "menu" | "form" | "workout" | "glucose";
@@ -38,7 +38,6 @@ export function LogSheet({
     insets = useSafeAreaInsets(),
     reduce = useReduceMotion();
   const [page, setPage] = useState<SheetPage>("menu"),
-    [rating, setRating] = useState(3),
     [glucose, setGlucose] = useState(""),
     [context, setContext] =
       useState<(typeof glucoseContexts)[number]>("Ikke angitt"),
@@ -50,7 +49,6 @@ export function LogSheet({
   useEffect(() => {
     if (visible) {
       setPage("menu");
-      setRating(3);
       setGlucose("");
       setContext("Ikke angitt");
       setActivity("Gåtur");
@@ -75,14 +73,6 @@ export function LogSheet({
       if (date > new Date())
         throw new Error("Tidspunktet kan ikke være i fremtiden.");
       const id = makeLogId();
-      if (page === "form")
-        await journal.save({
-          id,
-          kind: "form",
-          date: date.toISOString(),
-          rating,
-          note: note.trim(),
-        });
       if (page === "glucose")
         await journal.save({
           id,
@@ -327,109 +317,104 @@ export function LogSheet({
               </>
             ) : (
               <>
-                {page === "form" && (
+                {page === "form" ? (
+                  <DailyFormFields onSaved={onSaved} onSaving={setSaving} />
+                ) : (
                   <>
-                    <Copy>
-                      Hvordan opplever du formen din? Dette er din egen
-                      vurdering.
-                    </Copy>
-                    {chips(formLabels, formLabels[rating - 1]!, (value) =>
-                      setRating(formLabels.indexOf(value) + 1),
+                    {page === "workout" && (
+                      <>
+                        <Copy>
+                          Velg aktivitet. Klokken starter når du trykker Start.
+                          Økten fortsetter å telles fra starttidspunktet når
+                          appen er i bakgrunnen.
+                        </Copy>
+                        {chips(workoutTypes, activity, setActivity)}
+                        <Copy small>
+                          Kun tidtaking. Ingen GPS, puls eller kaloriberegning.
+                        </Copy>
+                      </>
                     )}
-                  </>
-                )}
-                {page === "workout" && (
-                  <>
-                    <Copy>
-                      Velg aktivitet. Klokken starter når du trykker Start.
-                      Økten fortsetter å telles fra starttidspunktet når appen
-                      er i bakgrunnen.
-                    </Copy>
-                    {chips(workoutTypes, activity, setActivity)}
-                    <Copy small>
-                      Kun tidtaking. Ingen GPS, puls eller kaloriberegning.
-                    </Copy>
-                  </>
-                )}
-                {page === "glucose" && (
-                  <>
-                    <Copy>
-                      Legg inn verdien fra måleapparatet ditt. Appen måler ikke
-                      blodsukker.
-                    </Copy>
+                    {page === "glucose" && (
+                      <>
+                        <Copy>
+                          Legg inn verdien fra måleapparatet ditt. Appen måler
+                          ikke blodsukker.
+                        </Copy>
+                        <TextInput
+                          accessibilityLabel="Blodsukker i mmol/L"
+                          placeholder="For eksempel 5,6"
+                          placeholderTextColor={theme.secondary}
+                          keyboardType="decimal-pad"
+                          value={glucose}
+                          onChangeText={setGlucose}
+                          maxLength={8}
+                          editable={!disabled}
+                          style={inputStyle}
+                        />
+                        <Text style={{ color: theme.secondary, fontSize: 13 }}>
+                          Enhet: mmol/L
+                        </Text>
+                        {chips(glucoseContexts, context, setContext)}
+                      </>
+                    )}
+                    {page !== "workout" && (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Copy>Tidspunkt</Copy>
+                        <DateTimePicker
+                          value={date}
+                          maximumDate={new Date()}
+                          mode={Platform.OS === "ios" ? "datetime" : "date"}
+                          locale="nb-NO"
+                          themeVariant={theme.dark ? "dark" : "light"}
+                          onChange={(_, value) => {
+                            if (value) setDate(value);
+                          }}
+                        />
+                      </View>
+                    )}
                     <TextInput
-                      accessibilityLabel="Blodsukker i mmol/L"
-                      placeholder="For eksempel 5,6"
+                      accessibilityLabel="Valgfritt notat"
+                      placeholder="Legg til et notat (valgfritt)"
                       placeholderTextColor={theme.secondary}
-                      keyboardType="decimal-pad"
-                      value={glucose}
-                      onChangeText={setGlucose}
-                      maxLength={8}
+                      value={note}
+                      onChangeText={setNote}
+                      multiline
+                      maxLength={500}
                       editable={!disabled}
-                      style={inputStyle}
+                      style={[
+                        inputStyle,
+                        { minHeight: 95, textAlignVertical: "top" },
+                      ]}
                     />
-                    <Text style={{ color: theme.secondary, fontSize: 13 }}>
-                      Enhet: mmol/L
-                    </Text>
-                    {chips(glucoseContexts, context, setContext)}
+                    {error && (
+                      <Text
+                        accessibilityRole="alert"
+                        style={{ color: theme.coral }}
+                      >
+                        {error}
+                      </Text>
+                    )}
+                    {journal.error && <Copy small>{journal.error}</Copy>}
+                    {journal.loading && <Copy small>Laster loggen …</Copy>}
+                    <Button
+                      label={
+                        saving
+                          ? "Lagrer …"
+                          : page === "workout"
+                            ? "Start økten"
+                            : "Lagre registrering"
+                      }
+                      disabled={disabled}
+                      onPress={() => void submit()}
+                    />
                   </>
                 )}
-                {page !== "workout" && (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Copy>Tidspunkt</Copy>
-                    <DateTimePicker
-                      value={date}
-                      maximumDate={new Date()}
-                      mode={Platform.OS === "ios" ? "datetime" : "date"}
-                      locale="nb-NO"
-                      themeVariant={theme.dark ? "dark" : "light"}
-                      onChange={(_, value) => {
-                        if (value) setDate(value);
-                      }}
-                    />
-                  </View>
-                )}
-                <TextInput
-                  accessibilityLabel="Valgfritt notat"
-                  placeholder="Legg til et notat (valgfritt)"
-                  placeholderTextColor={theme.secondary}
-                  value={note}
-                  onChangeText={setNote}
-                  multiline
-                  maxLength={500}
-                  editable={!disabled}
-                  style={[
-                    inputStyle,
-                    { minHeight: 95, textAlignVertical: "top" },
-                  ]}
-                />
-                {error && (
-                  <Text
-                    accessibilityRole="alert"
-                    style={{ color: theme.coral }}
-                  >
-                    {error}
-                  </Text>
-                )}
-                {journal.error && <Copy small>{journal.error}</Copy>}
-                {journal.loading && <Copy small>Laster loggen …</Copy>}
-                <Button
-                  label={
-                    saving
-                      ? "Lagrer …"
-                      : page === "workout"
-                        ? "Start økten"
-                        : "Lagre registrering"
-                  }
-                  disabled={disabled}
-                  onPress={() => void submit()}
-                />
               </>
             )}
           </ScrollView>
