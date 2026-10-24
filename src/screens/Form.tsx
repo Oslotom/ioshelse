@@ -113,6 +113,7 @@ export function FormScreen() {
         ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
         ListHeaderComponent={
           <View style={{ gap: 20, marginBottom: 20 }}>
+            {preferences.demo && <Copy>Demomodus · fiktive eksempeldata. Egne registreringer vises når du slår av demomodus.</Copy>}
             {journal.data.active && (
               <Card>
                 <Title

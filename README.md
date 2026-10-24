@@ -159,3 +159,9 @@ På enheten: kontroller alle faner, diagramvalg, periodeskifte, mål, miles/km, 
 - `legacy/swiftui/`: bevart SwiftUI-prototype. Bruk Expo fra prosjektroten til videre utvikling.
 
 EAS-bygg og faktisk HealthKit-tilgang er ikke kjørt i skyarbeidsområdet. Expo-domener må være tilgjengelige og Expo-/Apple-tilgang må brukes gjennom de offisielle innloggingsflytene. Ikke legg nøkler i kildekoden.
+
+Demomodus («Innstillinger → Bruk demodata») inkluderer også 14 dager med
+seks daglige formvurderinger, symptomer og notater, daglige fiktive
+blodsukkerverdier og sju eksempeløkter. Disse loggene bruker en egen lokal
+lagringsnøkkel (`vital.demo-journal.v1`); egne logger blir verken erstattet
+eller blandet med eksemplene. Endringer i demomodus gjelder bare demoen.

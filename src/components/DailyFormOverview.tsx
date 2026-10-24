@@ -11,6 +11,7 @@ import {
   metricTone,
   previousSeven,
 } from "../data/daily-form";
+import { useHealth } from "../data/store";
 import { useJournal } from "../data/journal-store";
 import { addDays, number } from "../data/models";
 import { Button, Card, Copy, Title, useVitalTheme } from "./UI";
@@ -23,6 +24,7 @@ export function DailyFormOverview({
   onEdit?: (day: string) => void;
   chartOnly?: boolean;
 }) {
+  const { preferences } = useHealth();
   const journal = useJournal(),
     theme = useVitalTheme(),
     [editing, setEditing] = useState<string>();
@@ -37,6 +39,7 @@ export function DailyFormOverview({
     return <>
       <Card>
         <Title text="Dagens form" icon="sunny-outline" color={theme.mint} />
+        {preferences.demo && <Copy small>Eksempeldata · ikke dine målinger</Copy>}
         <Text style={{ fontSize: 32, fontWeight: "700", color: theme.text }}>
           {entry ? number(dailyScore(entry), 1) : "–"}
           <Text style={{ fontSize: 14, color: theme.secondary }}> / 10 · total formscore i dag</Text>
@@ -55,6 +58,7 @@ export function DailyFormOverview({
     <>
       <Card>
         <Title text="Dagens form" icon="sunny-outline" color={theme.mint} />
+        {preferences.demo && <Copy small>Eksempeldata · ikke dine målinger</Copy>}
         {entry ? (
           <View style={{ gap: 5 }}>
             <Text

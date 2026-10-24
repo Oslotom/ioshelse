@@ -19,18 +19,22 @@ import {
 } from "./journal";
 import { DailyFormEntry } from "./daily-form";
 import { mergeDailyBackup } from "./daily-backup";
+import { useHealth } from "./store";
+import { makeDemoJournal } from "./demo-journal";
 import { withDeadline } from "./startup";
 
-function useJournalModel() {
+function useJournalModel(demo: boolean) {
   const repository = useRef(
     createJournalRepository({
       getItem: (key) =>
         withDeadline(
-          AsyncStorage.getItem(key),
+          demo
+            ? AsyncStorage.getItem("vital.demo-journal.v1").then((raw) => raw ?? JSON.stringify(makeDemoJournal()))
+            : AsyncStorage.getItem(key),
           5000,
           "Loggen bruker for lang tid på å åpne. Registreringene er beholdt.",
         ),
-      setItem: (key, value) => AsyncStorage.setItem(key, value),
+      setItem: (key, value) => AsyncStorage.setItem(demo ? "vital.demo-journal.v1" : key, value),
     }),
   ).current;
   const [data, setData] = useState<Journal>(emptyJournal),
@@ -127,7 +131,11 @@ function useJournalModel() {
 }
 const Context = createContext<ReturnType<typeof useJournalModel> | null>(null);
 export function JournalProvider({ children }: { children: React.ReactNode }) {
-  const model = useJournalModel();
+  const { preferences } = useHealth();
+  return <JournalModeProvider key={preferences.demo ? "demo" : "personal"} demo={preferences.demo}>{children}</JournalModeProvider>;
+}
+function JournalModeProvider({ children, demo }: { children: React.ReactNode; demo: boolean }) {
+  const model = useJournalModel(demo);
   return <Context.Provider value={model}>{children}</Context.Provider>;
 }
 export function useJournal() {

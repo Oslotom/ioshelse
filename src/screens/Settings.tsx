@@ -330,8 +330,7 @@ export function Settings() {
           onChange={(value) => void setDemo(value)}
         />
         <Copy small>
-          Demodata er eksempler, ikke dine målinger. Bytte av modus endrer aldri
-          Apple Helse.
+          Inkluderer to uker med dagsform, symptomer, notater, blodsukker og treningsøkter, samt skritt, puls og søvn. Alt er fiktive eksempler. Egne logger og Apple Helse endres ikke.
         </Copy>
       </Card>
       <Card>
