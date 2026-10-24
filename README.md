@@ -59,7 +59,7 @@ Bunnmenyen har **Oversikt · Aktivitet · + · Søvn · Form**. Plussknappen åp
 - **Dagens form**: ett samlet skjema med seks sliders (1–10), åtte symptomvalg og notat. Dato settes automatisk; dagens registrering kan redigeres.
 - **Start trening**: velg Gåtur, Løping, Sykling, Styrke eller Annet og start tidtaking. Den pågående økten vises i Form og kan avsluttes og lagres eller forkastes. Starttidspunktet lagres, slik at tiden inkluderer bakgrunn og omstart. Dette er tidtaking uten GPS, puls eller kaloriberegning.
 
-Oversikt viser øverst tre KPI-kort: registreringer i dag, snittform fra registrerte egenvurderinger siste sju kalenderdager, avsluttet treningstid i samme periode. Framtidige logger og pågående trening telles ikke med. Økter som krysser periodegrensen teller bare tiden innenfor perioden. Manglende data vises uten oppdiktede verdier. Kortene bruker hele journalen, uavhengig av historikkfilteret.
+Oversikt viser øverst tre kompakte donutdiagrammer: dagens skritt mot valgt dagsmål, dagens subjektive formscore av 10 og nattens registrerte søvntid med 8 timer som tydelig merket visuell referanse. Søvnringen er ikke en søvnkvalitetsscore. Manglende data vises med strek; registrert null skritt vises som null. Ved større tekst legges ringene under hverandre.
 
 Form viser kronologisk historikk med filtre for form og trening. Etter lagring åpnes Form. Enkelte registreringer kan slettes etter bekreftelse. Egne logger er adskilt fra både demodata, HealthKit og importert skritthistorikk; de skrives ikke til Apple Helse. Kun én treningsklokke kan være aktiv. Doble lagringsforespørsler med samme ID gir ikke duplikater.
 
