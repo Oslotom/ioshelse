@@ -1,9 +1,10 @@
 import React from "react";
 import { Text, View, useWindowDimensions } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { journalStats } from "../data/journal-stats";
 import { JournalEntry } from "../data/journal";
 import { number } from "../data/models";
-import { Card, Copy, Title, useVitalTheme } from "./UI";
+import { Card, Copy, useVitalTheme } from "./UI";
 
 export function JournalKPIs({
   entries,
@@ -22,7 +23,7 @@ export function JournalKPIs({
   const latest = stats.latestGlucose;
   const items = [
     {
-      title: "Registreringer i dag",
+      title: "Logger i dag",
       icon: "create-outline" as const,
       color: theme.mint,
       value: known ? number(stats.todayCount) : "–",
@@ -40,9 +41,9 @@ export function JournalKPIs({
       unit: "av 5",
       detail:
         known && stats.formCount
-          ? `${stats.formCount} egenvurderinger · siste sju dager`
+          ? `${stats.formCount} vurderinger · 7 dager`
           : known
-            ? "Ingen egenvurderinger · siste sju dager"
+            ? "Ingen vurderinger · 7 dager"
             : missing,
     },
     {
@@ -55,7 +56,7 @@ export function JournalKPIs({
           : "–",
       unit: "min",
       detail: known
-        ? `${stats.workoutCount} avsluttede økter · siste sju dager`
+        ? `${stats.workoutCount} avsluttede økter · 7 dager`
         : missing,
     },
     {
@@ -77,8 +78,8 @@ export function JournalKPIs({
     },
   ];
   return (
-    <View style={{ gap: 12 }}>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
         {items.map((item) => (
           <View
             key={item.title}
@@ -87,14 +88,36 @@ export function JournalKPIs({
               flexGrow: 1,
             }}
           >
-            <Card
-              style={{ minHeight: 180, height: "100%", padding: 18, gap: 12 }}
-            >
-              <Title text={item.title} icon={item.icon} color={item.color} />
-              <View style={{ gap: 3 }}>
+            <Card style={{ padding: 14, gap: 7, borderRadius: 20 }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Ionicons name={item.icon} size={15} color={item.color} />
                 <Text
                   style={{
-                    fontSize: 32,
+                    fontSize: 12,
+                    lineHeight: 16,
+                    fontWeight: "600",
+                    color: item.color,
+                    flexShrink: 1,
+                  }}
+                >
+                  {item.title}
+                </Text>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "baseline",
+                  flexWrap: "wrap",
+                  columnGap: 6,
+                  rowGap: 0,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 28,
+                    lineHeight: 34,
                     fontWeight: "700",
                     fontVariant: ["tabular-nums"],
                     color: theme.text,
@@ -102,11 +125,15 @@ export function JournalKPIs({
                 >
                   {item.value}
                 </Text>
-                <Text style={{ color: theme.secondary, fontSize: 12 }}>
+                <Text style={{ color: theme.secondary, fontSize: 11 }}>
                   {item.unit}
                 </Text>
               </View>
-              <Copy small>{item.detail}</Copy>
+              <Text
+                style={{ fontSize: 11, lineHeight: 15, color: theme.secondary }}
+              >
+                {item.detail}
+              </Text>
             </Card>
           </View>
         ))}
