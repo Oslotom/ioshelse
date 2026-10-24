@@ -362,8 +362,9 @@ export function Settings() {
         <Copy>
           Opplysningene blir på enheten. VITAL leser fra iPhonens skritteller
           eller, i native bygg, Apple Helse. Ingen konto, analyseverktøy eller
-          server. Innstillinger og eventuell importert skritthistorikk lagres
-          lokalt. Importen kan slettes under Datakilde.
+          server. Innstillinger, egne registreringer og eventuell importert
+          skritthistorikk lagres lokalt. Egne registreringer kan slettes i Form,
+          og importen under Datakilde.
         </Copy>
         <Row label="Versjon" value="1.0.0" />
       </Card>

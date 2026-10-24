@@ -44,6 +44,18 @@ For å unngå dobbelttelling velges én kilde/enhet, eksakte duplikater fjernes,
 
 Oppdater til siste `main`, kjør `npm ci`, stopp gammel Metro med Ctrl+C og start `npm run start:go -- --clear`. Lukk og åpne prosjektet i Expo Go igjen. Oppstarten venter maksimalt fem sekunder på preferanser; importdatabasen lastes deretter i bakgrunnen og har en egen tidsgrense. Feil vises i appen uten å slette importert historikk. SQLite, dokumentvelger og filsystem lastes ved behov. Ikke slett Expo Go eller appdata som første feilsøkingstiltak, siden det kan fjerne lokal historikk.
 
+## Form og registreringer
+
+Bunnmenyen har **Oversikt · Aktivitet · + · Søvn · Form**. Plussknappen åpner et panel nedenfra uten å bytte fane. **Trender** finnes via diagramikonet øverst i Aktivitet, og **Innstillinger** via profil-/tannhjulikonet.
+
+- **Dagens form**: egen vurdering fra Svært dårlig til Svært god, tidspunkt og valgfritt notat.
+- **Start trening**: velg Gåtur, Løping, Sykling, Styrke eller Annet og start tidtaking. Den pågående økten vises i Form og kan avsluttes og lagres eller forkastes. Starttidspunktet lagres, slik at tiden inkluderer bakgrunn og omstart. Dette er tidtaking uten GPS, puls eller kaloriberegning.
+- **Logg blodsukker**: manuelt innlagt måleverdi i mmol/L, tidspunkt, måltidssituasjon og valgfritt notat. Desimalkomma støttes. Appen måler eller tolker ikke blodsukker.
+
+Form viser kronologisk historikk med filtre for form, trening og blodsukker. Etter lagring åpnes Form. Enkelte registreringer kan slettes etter bekreftelse. Egne logger er adskilt fra både demodata, HealthKit og importert skritthistorikk; de skrives ikke til Apple Helse. Kun én treningsklokke kan være aktiv. Doble lagringsforespørsler med samme ID gir ikke duplikater.
+
+Journalen lagres lokalt med AsyncStorage under en egen nøkkel og leses uten å blokkere appens oppstart. Endringer lagres sekvensielt før visningen oppdateres; feil eller ugyldig lagring erstattes ikke automatisk med en tom logg. Maksimalt 10 000 registreringer og 500 tegn per notat. Tester dekker verdier, tidsregning, omstart av økter, samtidige lagringer, feil og databevaring. På fysisk iPhone må du kontrollere plussmeny, tastatur, dato-/tidsvalg, VoiceOver, lagring/omstart, bakgrunnsøkter og sletting.
+
 ## Søvn
 
 Søvn har en egen fane i bunnmenyen, med datovalg, registrert søvntid, tidslinje, tilgjengelige faser og sju netters historikk. Manglende netter inngår ikke som null timer i gjennomsnittet. Nattens vindu er lokal kl. 12 dagen før til lokal kl. 12 på valgt dato; grensekryssende intervaller klippes, og overlappende søvntid telles bare én gang. Første/siste registrering er ikke nødvendigvis faktisk legge-/stå-opp-tid. Ingen søvnscore eller diagnoser genereres.
@@ -90,7 +102,7 @@ Tillatelsesskjermen kan fullføres uten å gi lesetilgang. Apple skjuler om lese
 
 Data oppdateres ved aktivering, manuell oppdatering og HealthKit-endringer i forgrunnen. Daglige summer og hvilepuls hentes for 740 dager; puls/HRV/treningsøkter for 60 dager; søvn for åtte dager. Dagvis skrittanalyse viser dagens timer. År og seks måneder viser månedssummer. Ukesammenligninger bruker hele registrerte dager og utelater dagens ufullstendige tall. Dager uten data inngår ikke i gjennomsnittet.
 
-Direkte sensor- og HealthKit-målinger holdes i minnet og sendes ikke til en server. Importert skritthistorikk lagres lokalt i SQLite til den erstattes eller slettes. Preferanser lagres i AsyncStorage. Påminnelser er lokale, valgfrie og inneholder ingen helsemålinger. Ingen kontotjeneste eller analyse-SDK er inkludert.
+Direkte sensor- og HealthKit-målinger holdes i minnet og sendes ikke til en server. Importert skritthistorikk lagres lokalt i SQLite til den erstattes eller slettes. Preferanser og egne Form-registreringer lagres i AsyncStorage. Påminnelser er lokale, valgfrie og inneholder ingen helsemålinger. Ingen kontotjeneste eller analyse-SDK er inkludert.
 
 ## Kontroller
 
@@ -113,7 +125,7 @@ På enheten: kontroller alle faner, diagramvalg, periodeskifte, mål, miles/km, 
 
 ## Filer
 
-- `src/App.tsx`: native navigasjon, fem faner og detaljskjermer.
+- `src/App.tsx`: native navigasjon med fire innholdssider, en sentral plussknapp og detaljskjermer.
 - `src/screens/`: oversikt, aktivitet, trender, skritt, puls og innstillinger.
 - `src/components/`: tilgjengelige diagrammer, kort og designsystem.
 - `src/data/`: skritteller- og HealthKit-adaptere, demodata, MVVM-lignende tilstand og beregninger.
