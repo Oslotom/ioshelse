@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppState } from "react-native";
+import { restoreStartupState } from "./startup";
 import { ImportInfo, ImportedSteps } from "./apple-export";
 import { readSavedImport, saveImport, eraseImport } from "./import-storage";
 import { Appearance } from "../theme";
@@ -57,8 +58,9 @@ function useModel() {
   current.current = preferences;
   useEffect(() => {
     let mounted = true;
-    AsyncStorage.getItem("vital.preferences.v1")
-      .then(async (raw) => {
+    void restoreStartupState({
+      readPreferences: () => AsyncStorage.getItem("vital.preferences.v1"),
+      onPreferences: (raw) => {
         if (!mounted) return;
         if (raw) {
           const p = JSON.parse(raw) as Partial<Preferences>;
@@ -79,16 +81,23 @@ function useModel() {
                 : 10000,
           });
         }
-        const saved = await readSavedImport();
-        if (mounted) setImportInfo(saved?.info);
-      })
-      .catch(() => {
-        if (mounted)
-          setError("Innstillingene kunne ikke leses. Standardvalg brukes.");
-      })
-      .finally(() => {
+      },
+      onReady: () => {
         if (mounted) setHydrated(true);
-      });
+      },
+      readImport: () => readSavedImport(),
+      onImport: (saved) => {
+        if (mounted) setImportInfo(saved?.info);
+      },
+      onError: (error) => {
+        if (mounted)
+          setError(
+            error instanceof Error
+              ? error.message
+              : "Lokal lagring kunne ikke åpnes. Lagrede data er beholdt.",
+          );
+      },
+    });
     return () => {
       mounted = false;
     };

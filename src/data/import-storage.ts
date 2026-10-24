@@ -1,6 +1,5 @@
-import * as SQLite from "expo-sqlite";
-import * as DocumentPicker from "expo-document-picker";
-import { File, FileMode, Paths } from "expo-file-system";
+import type * as SQLite from "expo-sqlite";
+import { withDeadline } from "./startup";
 import {
   createExportReader,
   ExportPreview,
@@ -12,6 +11,7 @@ let database: Promise<SQLite.SQLiteDatabase> | undefined;
 async function db() {
   if (!database)
     database = (async () => {
+      const SQLite = await import("expo-sqlite");
       const value = await SQLite.openDatabaseAsync("vital-import.db");
       await value.execAsync(
         "CREATE TABLE IF NOT EXISTS imported_steps (id INTEGER PRIMARY KEY CHECK(id = 1), payload TEXT NOT NULL)",
@@ -21,10 +21,13 @@ async function db() {
   return database;
 }
 export async function readSavedImport(): Promise<ImportedSteps | undefined> {
-  const row = await (
-    await db()
-  ).getFirstAsync<{ payload: string }>(
-    "SELECT payload FROM imported_steps WHERE id = 1",
+  const row = await withDeadline(
+    (async () =>
+      (await db()).getFirstAsync<{ payload: string }>(
+        "SELECT payload FROM imported_steps WHERE id = 1",
+      ))(),
+    10000,
+    "Importdatabasen svarte ikke. Lagret historikk er beholdt. Prøv igjen senere, eller velg skrittelleren.",
   );
   if (!row) return;
   const value = JSON.parse(row.payload) as ImportedSteps;
@@ -51,6 +54,10 @@ export async function pickAppleExport(
   onProgress: (value: number) => void,
   signal: AbortSignal,
 ): Promise<{ preview: ExportPreview; name: string } | undefined> {
+  const [DocumentPicker, { File, FileMode, Paths }] = await Promise.all([
+    import("expo-document-picker"),
+    import("expo-file-system"),
+  ]);
   const picked = await DocumentPicker.getDocumentAsync({
     type: "*/*",
     multiple: false,
@@ -59,7 +66,7 @@ export async function pickAppleExport(
   if (picked.canceled) return;
   const asset = picked.assets[0]!;
   const file = new File(asset.uri);
-  let handle: ReturnType<File["open"]> | undefined;
+  let handle: ReturnType<InstanceType<typeof File>["open"]> | undefined;
   try {
     const extension = asset.name.toLowerCase().split(".").at(-1);
     if (extension !== "xml" && extension !== "zip")

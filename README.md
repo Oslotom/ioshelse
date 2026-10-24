@@ -40,6 +40,10 @@ ZIP/XML leses i små biter på enheten. Bare skrittmålinger fra valgt kilde lag
 
 For å unngå dobbelttelling velges én kilde/enhet, eksakte duplikater fjernes, og overlappende intervaller fra samme kilde utelates med antallet vist i forhåndsvisningen. Skritt plasseres på intervallets startdato/-time i telefonens tidssone. Ingen fordeling over timer/dager estimeres. Summene kan derfor avvike fra Helse-appens sammenslåtte og kildeprioriterte totaler. Importen er heller ikke en automatisk sikkerhetskopi: behold eksportfilen i Filer ved bytte av telefon eller sletting av Expo Go.
 
+## Hvis appen blir stående på «Åpner VITAL …»
+
+Oppdater til siste `main`, kjør `npm ci`, stopp gammel Metro med Ctrl+C og start `npm run start:go -- --clear`. Lukk og åpne prosjektet i Expo Go igjen. Oppstarten venter maksimalt fem sekunder på preferanser; importdatabasen lastes deretter i bakgrunnen og har en egen tidsgrense. Feil vises i appen uten å slette importert historikk. SQLite, dokumentvelger og filsystem lastes ved behov. Ikke slett Expo Go eller appdata som første feilsøkingstiltak, siden det kan fjerne lokal historikk.
+
 ## Bygg med EAS
 
 Prosjektkoblingen, eier og slug ligger allerede i `app.json`. Ingen prosjekt-ID skal opprettes på nytt. Logg inn på Expo med en konto som har tilgang til `oslotom/helse`:
