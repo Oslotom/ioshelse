@@ -23,6 +23,7 @@ export function Chart({
   unit = "skritt",
   digits = 0,
   average = emptyReadings,
+  maxGap = 15 * 60000,
 }: {
   data: Reading[];
   color: string;
@@ -32,6 +33,7 @@ export function Chart({
   unit?: string;
   digits?: number;
   average?: Reading[];
+  maxGap?: number;
 }) {
   const [width, setWidth] = useState(280),
     [selected, setSelected] = useState<number>();
@@ -44,9 +46,9 @@ export function Chart({
         1,
       ),
       minimum: data.reduce((value, r) => Math.min(value, r.value), Infinity),
-      groups: line ? pulseSeries(plotSamples(data)) : [],
+      groups: line ? pulseSeries(plotSamples(data), maxGap) : [],
     }),
-    [data, average, line],
+    [data, average, line, maxGap],
   );
   const min = line ? Math.max(0, minimum - 8) : 0;
   const lowTime = data.length ? +new Date(data[0]!.date) : 0,
@@ -371,41 +373,35 @@ export function SleepTimeline({
     (value, s) => Math.max(value, +new Date(s.end)),
     0,
   );
+  const chartHeight = Math.max(120, stages.length * 32);
   const x = (date: string) =>
-    48 + ((+new Date(date) - start) / Math.max(1, end - start)) * (width - 48);
+    45 + ((+new Date(date) - start) / Math.max(1, end - start)) * (width - 55);
+  const y = (stage: string) => 15 + stages.indexOf(stage) * ((chartHeight - 30) / Math.max(1, stages.length - 1));
+  const time = (stamp: number) => new Date(stamp).toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
   return (
-    <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-      <Svg
-        width={width}
-        height={stages.length * 24}
-        accessible
-        accessibilityLabel="Tidslinje for registrerte søvnfaser"
-      >
-        {segments.map((s, i) => (
-          <Rect
-            key={i}
-            x={x(s.start)}
-            y={stages.indexOf(s.stage) * 24 + 3}
-            width={Math.max(1, x(s.end) - x(s.start))}
-            height={14}
-            rx={3}
-            fill={theme.lavender}
-            opacity={s.stage === "Dyp" ? 1 : s.stage === "Våken" ? 0.25 : 0.6}
-          />
-        ))}
+    <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} style={{ gap: 8 }}>
+      <Svg width={width} height={chartHeight} accessible
+        accessibilityLabel="Tidslinje for registrerte søvnfaser. Opphold betyr manglende data.">
+        {stages.map((stage) => <Line key={stage} x1={45} x2={width - 10} y1={y(stage)} y2={y(stage)} stroke={theme.track} strokeDasharray="3 4" />)}
+        {segments.map((segment, index) => {
+          const next = segments[index + 1];
+          const color = segment.stage === "Våken" ? theme.orange : segment.stage === "Dyp" ? theme.lavender : theme.mint;
+          return <React.Fragment key={index}>
+            <Rect x={x(segment.start)} y={y(segment.stage) - 6}
+              width={Math.max(1, x(segment.end) - x(segment.start))} height={12} rx={5}
+              fill={color} opacity={0.18} />
+            <Line x1={x(segment.start)} x2={x(segment.end)} y1={y(segment.stage)} y2={y(segment.stage)}
+              stroke={color} strokeWidth={3} strokeLinecap="round" />
+            {next && segment.end === next.start && <Line x1={x(segment.end)} x2={x(next.start)}
+              y1={y(segment.stage)} y2={y(next.stage)} stroke={theme.mint} strokeWidth={1.5} opacity={0.5} />}
+          </React.Fragment>;
+        })}
       </Svg>
-      <View
-        pointerEvents="none"
-        style={{ position: "absolute", left: 0, top: 0, gap: 9 }}
-      >
-        {stages.map((stage) => (
-          <Text
-            key={stage}
-            style={{ color: theme.secondary, fontSize: 11, lineHeight: 15 }}
-          >
-            {stage}
-          </Text>
-        ))}
+      <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, height: chartHeight }}>
+        {stages.map((stage) => <Text key={stage} style={{ position: "absolute", top: y(stage) - 7, color: theme.secondary, fontSize: 10 }}>{stage}</Text>)}
+      </View>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", paddingLeft: 45 }}>
+        {[start, (start + end) / 2, end].map((stamp) => <Text key={stamp} style={{ color: theme.secondary, fontSize: 10 }}>{time(stamp)}</Text>)}
       </View>
     </View>
   );

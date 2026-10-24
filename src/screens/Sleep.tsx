@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useHealth } from "../data/store";
 import { nightSleep, sleepHistory, sleepTime } from "../data/sleep";
 import { dateLabel, sleepDuration } from "../data/models";
+import { SleepNight } from "../components/SleepNight";
+import { dayKey } from "../data/daily-form";
 import { Chart, SleepTimeline } from "../components/Charts";
 import {
-  BigValue,
   Button,
   Card,
   Copy,
@@ -21,27 +22,25 @@ export function SleepScreen() {
   const { data, preferences, phoneOnly, importedOnly, setDemo } = useHealth(),
     theme = useVitalTheme();
   const [date, setDate] = useState(new Date());
+  const [weekEnd, setWeekEnd] = useState(new Date());
+  const [period, setPeriod] = useState<7 | 30 | 90>(7);
+  const [trend, setTrend] = useState(false);
   const segments = nightSleep(data.sleep, date),
     seconds = sleepDuration(segments);
   const asleep = segments.filter((segment) => segment.asleep);
-  const history = sleepHistory(data.sleep, date),
+  const history = sleepHistory(data.sleep, date, period),
     recorded = history.filter((night) => night.seconds > 0);
   const average = recorded.length
     ? recorded.reduce((total, night) => total + night.seconds, 0) /
       recorded.length
     : undefined;
-  const prior = history.slice(0, -1).filter((night) => night.seconds > 0);
+  const prior = history.slice(-7, -1).filter((night) => night.seconds > 0);
   const priorAverage = prior.length
     ? prior.reduce((total, night) => total + night.seconds, 0) / prior.length
     : undefined;
   const stages = ["Dyp", "Lett", "REM", "Søvn", "Våken"].filter((stage) =>
     segments.some((segment) => segment.stage === stage),
   );
-  const time = (value: string) =>
-    new Date(value).toLocaleTimeString("nb-NO", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   const missing = phoneOnly
     ? "iPhonens skritteller kan ikke registrere søvn. Vi beregner ikke søvn fra skrittene dine."
     : importedOnly
@@ -66,31 +65,30 @@ export function SleepScreen() {
           locale="nb-NO"
           themeVariant={theme.dark ? "dark" : "light"}
           onChange={(_, value) => {
-            if (value) setDate(value);
+            if (value) { setDate(value); setWeekEnd(value); }
           }}
         />
+      </View>
+      <View style={{ flexDirection: "row", gap: 5 }}>
+        {sleepHistory(data.sleep, weekEnd, 7).map((night) => {
+          const value = new Date(night.date), selected = dayKey(value) === dayKey(date);
+          return <Pressable key={night.date} accessibilityRole="button"
+            accessibilityLabel={`${dateLabel(value)}. ${night.seconds > 0 ? sleepTime(night.seconds) : "Ingen data"}`}
+            accessibilityState={{ selected }} onPress={() => setDate(value)}
+            style={{ flex: 1, minHeight: 64, borderRadius: 17, alignItems: "center", justifyContent: "center", gap: 6,
+              backgroundColor: selected ? theme.lavender : theme.card }}>
+            <Text maxFontSizeMultiplier={1.2} style={{ fontSize: 11, color: selected ? "#FFFFFF" : theme.secondary }}>{value.toLocaleDateString("nb-NO", { weekday: "narrow" })}</Text>
+            <Text maxFontSizeMultiplier={1.2} style={{ fontSize: 15, fontWeight: "600", color: selected ? "#FFFFFF" : theme.text }}>{value.getDate()}</Text>
+            <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: night.seconds > 0 ? selected ? "#FFFFFF" : theme.lavender : theme.track }} />
+          </Pressable>;
+        })}
       </View>
       <Card>
         <Title text="Din natt, i oversikt" icon="moon" color={theme.lavender} />
         {seconds > 0 ? (
           <>
-            <BigValue value={sleepTime(seconds)} />
-            <Copy>Registrert søvntid · natten til {dateLabel(date)}</Copy>
+            <SleepNight segments={segments} />
             <SleepTimeline segments={segments} theme={theme} />
-            <Row
-              label="Første søvnregistrering"
-              value={time(asleep[0]!.start)}
-            />
-            <Row
-              label="Siste søvnregistrering"
-              value={time(
-                asleep.reduce(
-                  (latest, segment) =>
-                    segment.end > latest ? segment.end : latest,
-                  asleep[0]!.end,
-                ),
-              )}
-            />
             {priorAverage !== undefined && (
               <Copy>
                 {sleepTime(Math.abs(seconds - priorAverage))}{" "}
@@ -144,11 +142,13 @@ export function SleepScreen() {
               matching.map((segment) => ({ ...segment, asleep: true })),
             );
             return (
-              <Row
-                key={stage}
-                label={stage === "Søvn" ? "Søvn · uten faseinndeling" : stage}
-                value={sleepTime(duration)}
-              />
+              <View key={stage} style={{ gap: 7 }}>
+                <Row label={stage === "Søvn" ? "Søvn · uten faseinndeling" : stage} value={sleepTime(duration)} />
+                <View style={{ height: 5, borderRadius: 3, backgroundColor: theme.track, overflow: "hidden" }}>
+                  <View style={{ height: 5, borderRadius: 3, width: `${Math.min(100, duration / Math.max(1, seconds) * 100)}%`,
+                    backgroundColor: stage === "Våken" ? theme.orange : stage === "Dyp" ? theme.lavender : theme.mint }} />
+                </View>
+              </View>
             );
           })}
           <Copy small>
@@ -160,11 +160,30 @@ export function SleepScreen() {
       )}
       <Card>
         <Title
-          text="Sju netter"
+          text="Søvn over tid"
           icon="bar-chart-outline"
           color={theme.lavender}
         />
+        <View style={{ flexDirection: "row", backgroundColor: theme.track, borderRadius: 12, padding: 4 }}>
+          {([7, 30, 90] as const).map((days) => <Pressable key={days} accessibilityRole="tab"
+            accessibilityState={{ selected: period === days }} onPress={() => setPeriod(days)}
+            style={{ flex: 1, minHeight: 40, borderRadius: 9, alignItems: "center", justifyContent: "center", backgroundColor: period === days ? theme.card : "transparent" }}>
+            <Text style={{ color: period === days ? theme.lavender : theme.secondary, fontSize: 13, fontWeight: "600" }}>{days} netter</Text>
+          </Pressable>)}
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <View style={{ gap: 4, flex: 1 }}>
+            <Text style={{ color: theme.text, fontWeight: "700", fontSize: 24 }}>{average === undefined ? "–" : sleepTime(average)}</Text>
+            <Copy small>Gjennomsnitt · {recorded.length} registrerte netter</Copy>
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel={trend ? "Vis søvn som søyler" : "Vis søvn som linje"}
+            onPress={() => setTrend((current) => !current)} style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 12, backgroundColor: theme.lavender + "15", borderRadius: 12 }}>
+            <Text style={{ color: theme.lavender, fontSize: 12 }}>{trend ? "Vis søyler" : "Vis linje"}</Text>
+          </Pressable>
+        </View>
         <Chart
+          line={trend}
+          maxGap={36 * 3600000}
           data={recorded.map((night) => ({
             date: night.date,
             value: night.seconds / 3600,
@@ -174,24 +193,12 @@ export function SleepScreen() {
           unit="timer"
           digits={2}
         />
-        {average !== undefined && (
-          <>
-            <Row
-              label="Snitt per registrerte natt"
-              value={sleepTime(average)}
-            />
-            <Row
-              label="Netter med søvndata"
-              value={`${recorded.length} av 7`}
-            />
-          </>
-        )}
         <Copy small>
           Netter uten data er ikke null timer og inngår ikke i snittet. Hver
           natt avgrenses fra kl. 12 dagen før til kl. 12 på valgt dato.
         </Copy>
         {history
-          .slice()
+          .slice(-7)
           .reverse()
           .map((night) => (
             <Row

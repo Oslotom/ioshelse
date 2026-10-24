@@ -1,3 +1,4 @@
+import { SleepNight } from "../components/SleepNight";
 import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -394,25 +395,8 @@ export function SleepCard() {
     >
       {period === "Dag" && seconds > 0 ? (
         <>
-          <BigValue value={sleepTime(seconds)} />
+          <SleepNight segments={segments} />
           <SleepTimeline segments={segments} theme={theme} />
-          {["Dyp", "Lett", "REM", "Søvn", "Våken"]
-            .filter((stage) =>
-              segments.some((segment) => segment.stage === stage),
-            )
-            .map((stage) => (
-              <Row
-                key={stage}
-                label={stage}
-                value={sleepTime(
-                  sleepDuration(
-                    segments
-                      .filter((segment) => segment.stage === stage)
-                      .map((segment) => ({ ...segment, asleep: true })),
-                  ),
-                )}
-              />
-            ))}
           <Copy small>
             Fasetider kan overlappe i registreringene og skal ikke summeres til
             totalen. Våken tid regnes ikke som søvn.

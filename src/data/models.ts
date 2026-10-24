@@ -121,14 +121,14 @@ export function sleepDuration(segments: Sleep[]) {
     });
   return (total + (end ? end - start : 0)) / 1000;
 }
-export function pulseSeries(readings: Reading[]): Reading[][] {
+export function pulseSeries(readings: Reading[], maxGap = 15 * 60000): Reading[][] {
   const groups: Reading[][] = [];
   [...readings]
     .sort((a, b) => a.date.localeCompare(b.date))
     .forEach((r) => {
       const group = groups.at(-1),
         last = group?.at(-1);
-      if (last && +new Date(r.date) - +new Date(last.date) <= 15 * 60000)
+      if (last && +new Date(r.date) - +new Date(last.date) <= maxGap)
         group!.push(r);
       else groups.push([r]);
     });

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { nightSleep, sleepHistory } from "../src/data/sleep";
-import { sleepDuration } from "../src/data/models";
+import { sleepDuration, pulseSeries } from "../src/data/models";
 const date = new Date(2026, 9, 24),
   iso = (day: number, hour: number) =>
     new Date(2026, 9, day, hour).toISOString();
@@ -31,4 +31,15 @@ test("seven-night history preserves missing nights without creating sleep", () =
   assert.equal(history.length, 7);
   assert.equal(history.filter((n) => n.seconds > 0).length, 1);
   assert.equal(history.at(-1)!.seconds, 8 * 3600);
+});
+
+// A 25-hour calendar day is continuous; an unrecorded night remains a gap.
+test("nightly trend connects adjacent DST dates but preserves missing nights", () => {
+  const readings = [
+    { date: "2026-10-24T22:00:00Z", value: 7 },
+    { date: "2026-10-25T23:00:00Z", value: 8 },
+    { date: "2026-10-27T23:00:00Z", value: 6 },
+  ];
+  assert.deepEqual(pulseSeries(readings, 36 * 3600000).map((group) => group.length), [2, 1]);
+  assert.equal(pulseSeries(readings).length, 3);
 });
