@@ -44,6 +44,12 @@ For å unngå dobbelttelling velges én kilde/enhet, eksakte duplikater fjernes,
 
 Oppdater til siste `main`, kjør `npm ci`, stopp gammel Metro med Ctrl+C og start `npm run start:go -- --clear`. Lukk og åpne prosjektet i Expo Go igjen. Oppstarten venter maksimalt fem sekunder på preferanser; importdatabasen lastes deretter i bakgrunnen og har en egen tidsgrense. Feil vises i appen uten å slette importert historikk. SQLite, dokumentvelger og filsystem lastes ved behov. Ikke slett Expo Go eller appdata som første feilsøkingstiltak, siden det kan fjerne lokal historikk.
 
+## Graffilter og minimering på Oversikt
+
+Under KPI-kortene velger du dato og Dag/Uke/Måned. Uke og Måned betyr henholdsvis sju og 30 kalenderdager til og med valgt dato. Valget oppdaterer skritt, puls, energi/trening/distanse, søvn og skritttrenden samtidig. Skrittellermodus tilbyr bare Dag/Uke og datoer innenfor tilgjengelig sjudagershistorikk; eldre dager utenfor lastede data står tomme, uten estimater. Dagvis skrittgraf viser timesummer hvis de er lastet inn, ellers merket døgnsum. Siste valgte dag kan være ufullstendig.
+
+Trykk på overskriften i et grafkort for å minimere/utvide det. Minimerte kort beholder en kort oppsummering; dato- og periodevalget gjelder fortsatt. Grafene kan berøres uten å minimere kortet. Egne knapper åpner skritt- og pulsanalysen. Sammenligninger krever komplette registrerte kalenderdager i begge perioder og utelater dagens ufullstendige tall. Søvn viser natten eller snittet av registrerte netter i valgt periode. KPI-kortene bruker sine egne oppgitte journalperioder og påvirkes ikke av graffilteret.
+
 ## Form og registreringer
 
 Bunnmenyen har **Oversikt · Aktivitet · + · Søvn · Form**. Plussknappen åpner et panel nedenfra uten å bytte fane. **Trender** finnes via diagramikonet øverst i Aktivitet, og **Innstillinger** via profil-/tannhjulikonet.

@@ -1,9 +1,11 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, Pressable } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Haptics from "expo-haptics";
 import { useJournal } from "../data/journal-store";
 import { JournalKPIs } from "../components/JournalKPIs";
+import { CollapsibleCard } from "../components/CollapsibleCard";
 import { useHealth } from "../data/store";
 import {
   addDays,
@@ -15,18 +17,24 @@ import {
   startOfDay,
   sum,
 } from "../data/models";
+import {
+  compareGraphSteps,
+  graphPeriods,
+  GraphPeriod,
+  graphRange,
+} from "../data/graph-range";
+import { nightSleep, sleepHistory, sleepTime } from "../data/sleep";
 import { Chart, Ring, SleepTimeline } from "../components/Charts";
 import {
   BigValue,
+  Button,
   Card,
   Copy,
   Heading,
   Page,
   Row,
   Status,
-  Title,
   useVitalTheme,
-  WeekSummary,
 } from "../components/UI";
 
 export type DashboardProps = {
@@ -35,17 +43,30 @@ export type DashboardProps = {
   onSettings: () => void;
 };
 export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
-  const journal = useJournal();
-  const { data, preferences, phoneOnly } = useHealth(),
-    theme = useVitalTheme(),
+  const journal = useJournal(),
+    { data, preferences, phoneOnly, importedOnly } = useHealth(),
+    theme = useVitalTheme();
+  const [date, setDate] = useState(new Date()),
+    [selectedPeriod, setPeriod] = useState<GraphPeriod>("Dag");
+  const period =
+    phoneOnly && selectedPeriod === "Måned" ? "Uke" : selectedPeriod;
+  useEffect(() => {
+    if (phoneOnly && date < addDays(startOfDay(new Date()), -6))
+      setDate(addDays(startOfDay(new Date()), -6));
+  }, [phoneOnly, date]);
+  const range = graphRange(date, period),
     today = startOfDay(new Date()),
     tomorrow = addDays(today, 1);
-  const todayRows = inRange(data.steps, today, tomorrow),
-    steps = sum(todayRows),
-    distance = inRange(data.distance, today, tomorrow),
-    latest = data.pulse.at(-1);
-  const wasReached = useRef(steps >= preferences.goal),
-    reached = steps >= preferences.goal;
+  const rows = inRange(data.steps, range.start, range.end),
+    steps = sum(rows),
+    distance = inRange(data.distance, range.start, range.end);
+  const hours = inRange(data.hourly, range.start, range.end),
+    chartSteps = period === "Dag" && hours.length ? hours : rows;
+  const pulse = inRange(data.pulse, range.start, range.end),
+    latest = pulse.at(-1);
+  const actualTodaySteps = sum(inRange(data.steps, today, tomorrow)),
+    reached = actualTodaySteps >= preferences.goal,
+    wasReached = useRef(reached);
   useEffect(() => {
     if (reached && !wasReached.current)
       void Haptics.notificationAsync(
@@ -53,8 +74,7 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
       ).catch(() => {});
     wasReached.current = reached;
   }, [reached]);
-  const week = inRange(data.steps, addDays(today, -6), tomorrow),
-    yesterday = inRange(data.steps, addDays(today, -1), today);
+  const comparison = compareGraphSteps(data.steps, range);
   const hour = new Date().getHours(),
     greeting =
       hour >= 5 && hour < 10
@@ -62,6 +82,17 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
         : hour >= 10 && hour < 18
           ? "God dag"
           : "God kveld";
+  const chosenDay = startOfDay(date),
+    isToday = +chosenDay === +today;
+  function selectDate(next: Date) {
+    setDate(phoneOnly && next < addDays(today, -6) ? addDays(today, -6) : next);
+  }
+  const formatDate = (value: Date) =>
+    value.toLocaleDateString("nb-NO", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   return (
     <Page>
       <View
@@ -110,16 +141,101 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
         loading={journal.loading}
       />
       <Status />
-      <Card onPress={onSteps} label="Se skritt og aktivitetsdetaljer">
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Title text="Skritt i dag" icon="footsteps" color={theme.mint} />
-          <Ionicons
-            name="arrow-up-outline"
-            size={17}
-            color={theme.secondary}
-            style={{ transform: [{ rotate: "45deg" }] }}
+      <Card style={{ padding: 16, gap: 12 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+          }}
+        >
+          <Text style={{ color: theme.text, fontWeight: "600" }}>
+            Dato for grafene
+          </Text>
+          <DateTimePicker
+            value={date}
+            maximumDate={new Date()}
+            minimumDate={phoneOnly ? addDays(today, -6) : undefined}
+            mode="date"
+            locale="nb-NO"
+            themeVariant={theme.dark ? "dark" : "light"}
+            onChange={(_, value) => {
+              if (value) selectDate(value);
+            }}
           />
         </View>
+        <View
+          accessibilityRole="tablist"
+          style={{
+            flexDirection: "row",
+            gap: 6,
+            backgroundColor: theme.track,
+            borderRadius: 12,
+            padding: 4,
+          }}
+        >
+          {graphPeriods
+            .filter((value) => !phoneOnly || value !== "Måned")
+            .map((value) => (
+              <Pressable
+                key={value}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: period === value }}
+                onPress={() => setPeriod(value)}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  borderRadius: 9,
+                  paddingVertical: 10,
+                  backgroundColor:
+                    period === value ? theme.card : "transparent",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: period === value ? theme.text : theme.secondary,
+                  }}
+                >
+                  {value}
+                </Text>
+              </Pressable>
+            ))}
+        </View>
+        <Copy small>
+          {formatDate(range.start)}–{formatDate(chosenDay)}
+          {period === "Dag" ? "" : ` · ${range.days} kalenderdager`}. Filteret
+          gjelder grafene og målingene under. KPI-kortene bruker sine egne
+          oppgitte perioder.
+        </Copy>
+        {phoneOnly && (
+          <Copy small>
+            Skrittelleren har bare sju dagers historikk. Dager uten data i
+            valget står tomme.
+          </Copy>
+        )}
+        {!isToday && (
+          <Button
+            label="Tilbake til i dag"
+            secondary
+            onPress={() => setDate(new Date())}
+          />
+        )}
+      </Card>
+      <CollapsibleCard
+        title={
+          period === "Dag"
+            ? isToday
+              ? "Skritt i dag"
+              : "Skritt denne dagen"
+            : "Skritt i perioden"
+        }
+        icon="footsteps"
+        color={theme.mint}
+        summary={rows.length ? `${number(steps)} skritt` : "Ingen data"}
+      >
         <View
           style={{
             flexDirection: "row",
@@ -129,82 +245,102 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
           }}
         >
           <View style={{ flex: 1, gap: 4 }}>
-            <BigValue value={todayRows.length ? number(steps) : "–"} />
-            <Copy>av {number(preferences.goal)} skritt</Copy>
+            <BigValue value={rows.length ? number(steps) : "–"} unit="skritt" />
+            <Copy>
+              {period === "Dag"
+                ? `av ${number(preferences.goal)} skritt`
+                : `${rows.filter((row) => row.value >= preferences.goal).length} av ${rows.length} registrerte dager med nådd mål`}
+            </Copy>
           </View>
-          <Ring
-            progress={steps / preferences.goal}
-            goal={preferences.goal}
-            theme={theme}
-          />
+          {period === "Dag" && (
+            <Ring
+              progress={steps / preferences.goal}
+              goal={preferences.goal}
+              theme={theme}
+            />
+          )}
         </View>
-        <Chart
-          data={inRange(data.hourly, today, tomorrow)}
-          color={theme.mint}
-          theme={theme}
-          compact
-        />
+        <Chart data={chartSteps} color={theme.mint} theme={theme} />
+        <Copy small>
+          {period === "Dag"
+            ? hours.length
+              ? "Registrerte skritt per time."
+              : "Timefordeling mangler for denne dagen. Tilgjengelig døgnsum vises."
+            : "Registrerte døgnsummer. Dager uten data fylles ikke med null."}
+        </Copy>
         <Row
-          label={
+          label="Distanse i valget"
+          value={
             distance.length
               ? `${number(sum(distance) * (preferences.miles ? 0.621371 : 1), 1)} ${preferences.miles ? "mi" : "km"}`
-              : "Ingen distansemålinger"
+              : "Ingen data"
           }
-          value={reached ? "Dagens mål er nådd!" : "Ett skritt om gangen"}
         />
-        {todayRows.length > 0 && yesterday.length > 0 && (
-          <Copy small>
-            {number(Math.abs(steps - sum(yesterday)))}{" "}
-            {steps >= sum(yesterday) ? "flere" : "færre"} skritt enn hele
-            gårsdagen. Dagens tall er foreløpige.
-          </Copy>
-        )}
-      </Card>
-      <Card onPress={onHeart} label="Se pulsmålinger og historikk">
-        <Title text="Puls" icon="heart" color={theme.coral} />
+        <Copy small>
+          Siste dag kan være ufullstendig. Historiske mål beregnes med ditt
+          nåværende skrittmål.
+        </Copy>
+        <Button label="Åpne skrittanalyse" secondary onPress={onSteps} />
+      </CollapsibleCard>
+      <CollapsibleCard
+        title="Puls"
+        icon="heart"
+        color={theme.coral}
+        summary={
+          latest ? `${number(latest.value)} slag/min` : "Ingen pulsmålinger"
+        }
+      >
         {latest ? (
           <>
             <BigValue value={number(latest.value)} unit="slag/min" />
             <Chart
-              data={inRange(
-                data.pulse,
-                startOfDay(new Date(latest.date)),
-                addDays(startOfDay(new Date(latest.date)), 1),
-              )}
+              data={pulse}
               color={theme.coral}
               theme={theme}
               line
-              compact
+              unit="slag/min"
             />
             <Copy small>
-              Siste måling {dateLabel(latest.date, true)} · {latest.source}
+              Siste måling i valget {dateLabel(latest.date, true)} ·{" "}
+              {latest.source}
             </Copy>
+            <Row
+              label="Laveste / høyeste i valget"
+              value={`${number(pulse.reduce((v, r) => Math.min(v, r.value), Infinity))} / ${number(pulse.reduce((v, r) => Math.max(v, r.value), 0))}`}
+            />
           </>
         ) : (
           <Copy>
             {phoneOnly
-              ? "Puls er ikke tilgjengelig fra iPhonens skritteller. Den gir bare skritt, ikke pulsmålinger."
-              : "Ingen pulsmålinger. En Apple Watch eller kompatibel pulsmåler kan registrere puls i Helse."}
+              ? "Puls er ikke tilgjengelig fra iPhonens skritteller."
+              : importedOnly
+                ? "Importen inneholder bare skritt, ikke puls."
+                : "Ingen registrerte pulsmålinger i valgt periode."}
           </Copy>
         )}
-      </Card>
-      <Card>
-        <Title text="I bevegelse" icon="flame" color={theme.orange} />
-        {phoneOnly && (
+        <Button label="Åpne pulsanalyse" secondary onPress={onHeart} />
+      </CollapsibleCard>
+      <CollapsibleCard
+        title="I bevegelse"
+        icon="flame"
+        color={theme.orange}
+        summary="Energi, trening og distanse"
+      >
+        {(phoneOnly || importedOnly) && (
           <Copy small>
-            Skrittelleren leverer ikke distanse, kalorier eller
-            treningsminutter. Vi lager ingen estimater fra skrittene.
+            Denne datakilden leverer bare skritt. Vi beregner ikke kalorier,
+            treningsminutter eller distanse fra skrittene.
           </Copy>
         )}
         {(["energy", "exercise"] as const).map((key) => {
-          const rows = inRange(data[key], today, tomorrow);
+          const values = inRange(data[key], range.start, range.end);
           return (
             <Row
               key={key}
               label={key === "energy" ? "Aktiv energi" : "Trening"}
               value={
-                rows.length
-                  ? `${number(sum(rows))} ${key === "energy" ? "kcal" : "min"}`
+                values.length
+                  ? `${number(sum(values))} ${key === "energy" ? "kcal" : "min"}`
                   : "Ingen data"
               }
             />
@@ -218,111 +354,133 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
               : "Ingen data"
           }
         />
-      </Card>
-      <SleepCard />
-      <Card>
-        <Title text="Uken din" icon="bar-chart" color={theme.mint} />
-        <Chart data={week} color={theme.mint} theme={theme} />
-        {week.length > 0 && (
+      </CollapsibleCard>
+      <SleepCard date={date} period={period} />
+      <CollapsibleCard
+        title="Skritt over tid"
+        icon="bar-chart"
+        color={theme.mint}
+        summary={
+          rows.length
+            ? `${number(mean(rows)!)} skritt per registrerte dag`
+            : "Ingen data"
+        }
+      >
+        <Chart data={rows} color={theme.mint} theme={theme} />
+        {rows.length > 0 && (
           <Row
             label="Snitt per registrerte dag"
-            value={`${number(mean(week)!)} skritt`}
+            value={`${number(mean(rows)!)} skritt`}
           />
         )}
-        <WeekSummary />
-      </Card>
+        <Copy>
+          {comparison
+            ? `${number(Math.abs(comparison.percent))} % ${comparison.percent >= 0 ? "flere" : "færre"} skritt i ${comparison.days} hele dager fra valget enn i like mange foregående dager. Dagens ufullstendige tall er utelatt.`
+            : "Sammenligning krever hele registrerte dager i både valgt og foregående periode. Dagens ufullstendige tall er utelatt."}
+        </Copy>
+      </CollapsibleCard>
     </Page>
   );
 }
-export function SleepCard() {
-  const { data, phoneOnly } = useHealth(),
+export function SleepCard({
+  date = new Date(),
+  period = "Dag",
+}: {
+  date?: Date;
+  period?: GraphPeriod;
+}) {
+  const { data, phoneOnly, importedOnly } = useHealth(),
     theme = useVitalTheme(),
-    today = startOfDay(new Date()),
-    from = new Date(+today - 12 * 3600000);
-  const segments = data.sleep.filter((s) => new Date(s.start) >= from),
+    segments = nightSleep(data.sleep, date),
     seconds = sleepDuration(segments);
-  const previous = Array.from({ length: 7 }, (_, i) => {
-    const start = addDays(from, -i - 1),
-      end = addDays(start, 1);
-    return sleepDuration(
-      data.sleep.filter(
-        (s) => new Date(s.start) >= start && new Date(s.start) < end,
-      ),
-    );
-  }).filter((v) => v > 0);
+  const history = sleepHistory(
+      data.sleep,
+      date,
+      period === "Dag" ? 1 : period === "Uke" ? 7 : 30,
+    ),
+    recorded = history.filter((night) => night.seconds > 0);
+  const average = recorded.length
+    ? recorded.reduce((total, night) => total + night.seconds, 0) /
+      recorded.length
+    : undefined;
   return (
-    <Card>
-      <Title text="Søvn i natt" icon="moon" color={theme.lavender} />
-      {seconds > 0 ? (
+    <CollapsibleCard
+      title={period === "Dag" ? "Søvn denne natten" : "Søvn i perioden"}
+      icon="moon"
+      color={theme.lavender}
+      summary={
+        period === "Dag"
+          ? seconds > 0
+            ? sleepTime(seconds)
+            : "Ingen søvndata"
+          : average !== undefined
+            ? `${sleepTime(average)} per registrerte natt`
+            : "Ingen søvndata"
+      }
+    >
+      {period === "Dag" && seconds > 0 ? (
         <>
-          <BigValue
-            value={`${Math.floor(seconds / 3600)} t ${Math.floor((seconds % 3600) / 60)} min`}
-          />
+          <BigValue value={sleepTime(seconds)} />
           <SleepTimeline segments={segments} theme={theme} />
-          <View style={{ gap: 9 }}>
-            {["Dyp", "Lett", "REM", "Søvn", "Våken"].map((stage) => {
-              const stages = segments.filter((s) => s.stage === stage);
-              if (!stages.length) return null;
-              const total = stages.reduce(
-                (a, s) => a + (+new Date(s.end) - +new Date(s.start)) / 60000,
-                0,
-              );
-              return (
-                <View
-                  key={stage}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <Text
-                    style={{ width: 44, fontSize: 12, color: theme.secondary }}
-                  >
-                    {stage}
-                  </Text>
-                  <View
-                    style={{
-                      height: 9,
-                      borderRadius: 5,
-                      backgroundColor: theme.lavender,
-                      opacity: stage === "Dyp" ? 1 : 0.55,
-                      flex: Math.max(0.05, total / (seconds / 60)),
-                    }}
-                  />
-                  <Text style={{ fontSize: 12, color: theme.secondary }}>
-                    {number(total)} min
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
+          {["Dyp", "Lett", "REM", "Søvn", "Våken"]
+            .filter((stage) =>
+              segments.some((segment) => segment.stage === stage),
+            )
+            .map((stage) => (
+              <Row
+                key={stage}
+                label={stage}
+                value={sleepTime(
+                  sleepDuration(
+                    segments
+                      .filter((segment) => segment.stage === stage)
+                      .map((segment) => ({ ...segment, asleep: true })),
+                  ),
+                )}
+              />
+            ))}
+          <Copy small>
+            Fasetider kan overlappe i registreringene og skal ikke summeres til
+            totalen. Våken tid regnes ikke som søvn.
+          </Copy>
+
           <Copy small>
             {dateLabel(segments[0]!.start, true)}–
-            {new Date(segments.at(-1)!.end).toLocaleTimeString("nb-NO", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}{" "}
-            · registrert søvn
+            {dateLabel(segments.at(-1)!.end, true)} · tilgjengelige
+            registreringer. Overlappende søvntid telles én gang.
           </Copy>
-          {previous.length > 0 && (
-            <Copy small>
-              Snitt for {previous.length} tidligere registrerte netter:{" "}
-              {number(
-                previous.reduce((a, b) => a + b, 0) / previous.length / 3600,
-                1,
-              )}{" "}
-              t
-            </Copy>
-          )}
+        </>
+      ) : period !== "Dag" && recorded.length ? (
+        <>
+          <BigValue value={sleepTime(average!)} />
+          <Copy>Snitt per registrerte natt</Copy>
+          <Chart
+            data={recorded.map((night) => ({
+              date: night.date,
+              value: night.seconds / 3600,
+            }))}
+            color={theme.lavender}
+            theme={theme}
+            unit="timer"
+            digits={2}
+          />
+          <Row
+            label="Netter med data"
+            value={`${recorded.length} av ${history.length}`}
+          />
+          <Copy small>
+            Netter uten data er ikke null timer og inngår ikke i snittet.
+          </Copy>
         </>
       ) : (
         <Copy>
           {phoneOnly
-            ? "Søvn er ikke tilgjengelig fra iPhonens skritteller. Ingen søvntid eller søvnfaser blir beregnet fra skrittene dine."
-            : "Ingen søvndata i natt. Registrer søvn med en kompatibel enhet eller i Helse. Søvnfaser vises bare når de finnes."}
+            ? "Søvn er ikke tilgjengelig fra skrittelleren."
+            : importedOnly
+              ? "Importen inneholder bare skritt, ikke søvn."
+              : "Ingen søvnregistreringer er lastet inn for valget."}
         </Copy>
       )}
-    </Card>
+    </CollapsibleCard>
   );
 }
