@@ -21,12 +21,14 @@ import {
   StepsDetail,
   Trends,
 } from "./screens/Analytics";
+import { SleepScreen } from "./screens/Sleep";
 import { Onboarding, Settings } from "./screens/Settings";
 
 type StackParams = { Main: undefined; Steps: undefined; Heart: undefined };
 type TabParams = {
   Oversikt: undefined;
   Aktivitet: undefined;
+  Søvn: undefined;
   Trender: undefined;
   Innstillinger: undefined;
 };
@@ -41,7 +43,8 @@ function Tabs({ navigation }: NativeStackScreenProps<StackParams, "Main">) {
         headerTitleStyle: { fontWeight: "700", fontSize: 27 },
         headerStyle: { backgroundColor: theme.background },
         headerShadowVisible: false,
-        tabBarActiveTintColor: theme.mint,
+        tabBarActiveTintColor:
+          route.name === "Søvn" ? theme.lavender : theme.mint,
         tabBarInactiveTintColor: theme.secondary,
         tabBarStyle: { backgroundColor: theme.card, borderTopWidth: 0 },
         tabBarLabelStyle: { fontSize: 10, fontWeight: "500" },
@@ -52,9 +55,11 @@ function Tabs({ navigation }: NativeStackScreenProps<StackParams, "Main">) {
                 ? "grid"
                 : route.name === "Aktivitet"
                   ? "walk"
-                  : route.name === "Trender"
-                    ? "stats-chart"
-                    : "options"
+                  : route.name === "Søvn"
+                    ? "moon"
+                    : route.name === "Trender"
+                      ? "stats-chart"
+                      : "options"
             }
             size={size - 2}
             color={color}
@@ -78,6 +83,7 @@ function Tabs({ navigation }: NativeStackScreenProps<StackParams, "Main">) {
       <Tab.Screen name="Aktivitet">
         {() => <Activity onSteps={() => navigation.navigate("Steps")} />}
       </Tab.Screen>
+      <Tab.Screen name="Søvn" component={SleepScreen} />
       <Tab.Screen name="Trender" component={Trends} />
       <Tab.Screen name="Innstillinger" component={Settings} />
     </Tab.Navigator>

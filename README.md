@@ -44,6 +44,12 @@ For å unngå dobbelttelling velges én kilde/enhet, eksakte duplikater fjernes,
 
 Oppdater til siste `main`, kjør `npm ci`, stopp gammel Metro med Ctrl+C og start `npm run start:go -- --clear`. Lukk og åpne prosjektet i Expo Go igjen. Oppstarten venter maksimalt fem sekunder på preferanser; importdatabasen lastes deretter i bakgrunnen og har en egen tidsgrense. Feil vises i appen uten å slette importert historikk. SQLite, dokumentvelger og filsystem lastes ved behov. Ikke slett Expo Go eller appdata som første feilsøkingstiltak, siden det kan fjerne lokal historikk.
 
+## Søvn
+
+Søvn har en egen fane i bunnmenyen, med datovalg, registrert søvntid, tidslinje, tilgjengelige faser og sju netters historikk. Manglende netter inngår ikke som null timer i gjennomsnittet. Nattens vindu er lokal kl. 12 dagen før til lokal kl. 12 på valgt dato; grensekryssende intervaller klippes, og overlappende søvntid telles bare én gang. Første/siste registrering er ikke nødvendigvis faktisk legge-/stå-opp-tid. Ingen søvnscore eller diagnoser genereres.
+
+Skrittelleren leverer ikke søvn, og eksportimporten tar foreløpig bare med skritt. Disse modusene viser en forklaring og valg om å bytte hele appen til tydelig merkede demodata. Reelle søvndata kommer fra tilgjengelige HealthKit-registreringer i et native bygg. Faseinndeling vises bare når den finnes. Datovelgeren viser bare søvn som allerede er lastet inn; HealthKit-adapteren laster de siste åtte dagene.
+
 ## Bygg med EAS
 
 Prosjektkoblingen, eier og slug ligger allerede i `app.json`. Ingen prosjekt-ID skal opprettes på nytt. Logg inn på Expo med en konto som har tilgang til `oslotom/helse`:
@@ -107,7 +113,7 @@ På enheten: kontroller alle faner, diagramvalg, periodeskifte, mål, miles/km, 
 
 ## Filer
 
-- `src/App.tsx`: native navigasjon, fire faner og detaljskjermer.
+- `src/App.tsx`: native navigasjon, fem faner og detaljskjermer.
 - `src/screens/`: oversikt, aktivitet, trender, skritt, puls og innstillinger.
 - `src/components/`: tilgjengelige diagrammer, kort og designsystem.
 - `src/data/`: skritteller- og HealthKit-adaptere, demodata, MVVM-lignende tilstand og beregninger.

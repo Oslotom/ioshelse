@@ -21,6 +21,7 @@ export function Chart({
   line = false,
   compact = false,
   unit = "skritt",
+  digits = 0,
   average = emptyReadings,
 }: {
   data: Reading[];
@@ -29,6 +30,7 @@ export function Chart({
   line?: boolean;
   compact?: boolean;
   unit?: string;
+  digits?: number;
   average?: Reading[];
 }) {
   const [width, setWidth] = useState(280),
@@ -107,13 +109,13 @@ export function Chart({
       {!compact && (
         <Text style={{ color: theme.secondary, fontSize: 12, minHeight: 30 }}>
           {chosen
-            ? `${dateLabel(chosen.date, true)} · ${number(chosen.value)} ${unit}`
+            ? `${dateLabel(chosen.date, true)} · ${number(chosen.value, digits)} ${unit}`
             : `Trykk eller dra for detaljer · ${unit}`}
         </Text>
       )}
       <View
         accessible
-        accessibilityLabel={`Diagram med ${data.length} målinger, fra ${dateLabel(data[0]!.date)} til ${dateLabel(data.at(-1)!.date)}. Laveste ${number(minimum)}, høyeste ${number(max)} ${unit}.`}
+        accessibilityLabel={`Diagram med ${data.length} målinger, fra ${dateLabel(data[0]!.date)} til ${dateLabel(data.at(-1)!.date)}. Laveste ${number(minimum, digits)}, høyeste ${number(max, digits)} ${unit}.`}
         accessibilityRole="adjustable"
         accessibilityActions={[
           { name: "increment", label: "Neste måling" },
@@ -121,7 +123,7 @@ export function Chart({
         ]}
         accessibilityValue={{
           text: chosen
-            ? `${dateLabel(chosen.date, true)}, ${number(chosen.value)} ${unit}`
+            ? `${dateLabel(chosen.date, true)}, ${number(chosen.value, digits)} ${unit}`
             : `${data.length} målinger`,
         }}
         onAccessibilityAction={(e) =>
