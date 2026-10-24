@@ -23,8 +23,10 @@ export function DailyFormChart({
   secondary,
   onSelect,
   range,
+  showHint = true,
 }: {
   entries: DailyFormEntry[];
+  showHint?: boolean;
   range?: { start: string; end: string };
   primary: DailySeries;
   secondary?: MetricKey;
@@ -198,7 +200,7 @@ export function DailyFormChart({
           {range?.end ?? entries.at(-1)!.day}
         </Text>
       </View>
-      <Text
+      {showHint && <Text
         style={{
           color: theme.secondary,
           fontSize: 11,
@@ -209,7 +211,7 @@ export function DailyFormChart({
         Trykk eller dra for detaljer. Manglende dager vises som opphold.
         {(primary === "stress" || secondary === "stress") &&
           " Stress vises som råverdi i grafen; bare formscoren reverserer stress."}
-      </Text>
+      </Text>}
     </View>
   );
 }

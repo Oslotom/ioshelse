@@ -15,6 +15,7 @@ import { useHealth } from "../data/store";
 import { useJournal } from "../data/journal-store";
 import { addDays, number } from "../data/models";
 import { Button, Card, Copy, Title, useVitalTheme } from "./UI";
+import { CollapsibleCard } from "./CollapsibleCard";
 import { DailyFormChart } from "./DailyFormChart";
 import { DailyFormSheet } from "./DailyFormEditor";
 export function DailyFormOverview({
@@ -37,20 +38,19 @@ export function DailyFormOverview({
     const recent = entries.filter((item) => item.day >= start && item.day <= today);
     const average = scoreMean(recent);
     return <>
-      <Card>
-        <Title text="Dagens form" icon="sunny-outline" color={theme.mint} />
+      <CollapsibleCard title="Dagens form" icon="sunny-outline" color={theme.mint}
+        summary={entry ? `${number(dailyScore(entry), 1)} / 10 · i dag` : "Ingen registrering i dag"}
+        sparkline={recent.map((item) => ({ date: dayDate(item.day).toISOString(), value: dailyScore(item) }))}
+        sparklineLabel="Formscore siste to uker">
         {preferences.demo && <Copy small>Eksempeldata · ikke dine målinger</Copy>}
         <Text style={{ fontSize: 32, fontWeight: "700", color: theme.text }}>
           {entry ? number(dailyScore(entry), 1) : "–"}
           <Text style={{ fontSize: 14, color: theme.secondary }}> / 10 · total formscore i dag</Text>
         </Text>
         <Copy small>Siste to uker · {recent.length} av 14 dager registrert{average === undefined ? "" : ` · snitt ${number(average, 1)} / 10`}</Copy>
-        <DailyFormChart entries={recent} primary="score" range={{ start, end: today }}
+        <DailyFormChart showHint={false} entries={recent} primary="score" range={{ start, end: today }}
           onSelect={(item) => setEditing(item.day)} />
-        <Copy small>Subjektiv indikator, ingen medisinsk vurdering. De seks målingene vektes likt; stress regnes som 11 − stress.</Copy>
-        <Button label={entry ? "Rediger dagens form" : "Registrer dagens form"}
-          disabled={journal.loading || !journal.available} onPress={() => setEditing(today)} />
-      </Card>
+      </CollapsibleCard>
       <DailyFormSheet day={editing} onClose={() => setEditing(undefined)} />
     </>;
   }
