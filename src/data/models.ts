@@ -73,12 +73,24 @@ export function dailyMean(readings: Reading[]): Reading[] {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 export function movingAverage(readings: Reading[]): Reading[] {
-  return readings.flatMap((r) => {
-    const day = startOfDay(new Date(r.date));
-    const rows = inRange(readings, addDays(day, -6), addDays(day, 1));
-    return rows.length === 7 ? [{ date: r.date, value: mean(rows)! }] : [];
-  });
+  const ordered = [...readings].sort((a, b) => a.date.localeCompare(b.date));
+  const result: Reading[] = [];
+  let left = 0,
+    total = 0;
+  for (let right = 0; right < ordered.length; right++) {
+    const reading = ordered[right]!,
+      cutoff = addDays(startOfDay(new Date(reading.date)), -6);
+    total += reading.value;
+    while (left <= right && new Date(ordered[left]!.date) < cutoff) {
+      total -= ordered[left]!.value;
+      left++;
+    }
+    if (right - left + 1 === 7)
+      result.push({ date: reading.date, value: total / 7 });
+  }
+  return result;
 }
+
 export function monthly(readings: Reading[]): Reading[] {
   const groups = new Map<string, number>();
   readings.forEach((r) => {

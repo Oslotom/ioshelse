@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useHealth } from "../data/store";
@@ -80,11 +80,17 @@ export function Segments<T extends string>({
 }
 const periods = ["Dag", "Uke", "Måned", "6 md.", "År"] as const;
 export function StepsDetail() {
-  const { data, preferences, phoneOnly } = useHealth(),
+  const { data, preferences, phoneOnly, importedOnly, importInfo } =
+      useHealth(),
     theme = useVitalTheme();
   const [selectedPeriod, setPeriod] = useState<(typeof periods)[number]>("Uke");
   const period = phoneOnly && selectedPeriod !== "Dag" ? "Uke" : selectedPeriod;
-  const today = startOfDay(new Date()),
+  const [endDate, setEndDate] = useState(new Date());
+  useEffect(() => {
+    if (importedOnly && importInfo)
+      setEndDate(new Date(Math.min(Date.now(), +new Date(importInfo.to))));
+  }, [importedOnly, importInfo?.importedAt]);
+  const today = startOfDay(importedOnly ? endDate : new Date()),
     end = addDays(today, 1);
   let start = addDays(
     today,
@@ -97,7 +103,12 @@ export function StepsDetail() {
   const rows = inRange(data.steps, start, end),
     total = sum(rows),
     months = period === "6 md." || period === "År";
-  const chart = period === "Dag" ? data.hourly : months ? monthly(rows) : rows;
+  const chart =
+    period === "Dag"
+      ? inRange(data.hourly, today, end)
+      : months
+        ? monthly(rows)
+        : rows;
   const best = rows.reduce<Reading | undefined>(
     (a, b) => (!a || b.value > a.value ? b : a),
     undefined,
@@ -120,6 +131,27 @@ export function StepsDetail() {
   return (
     <Page>
       <Status />
+      {importedOnly && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Copy>Historikk til og med</Copy>
+          <DateTimePicker
+            value={endDate}
+            mode="date"
+            locale="nb-NO"
+            maximumDate={new Date()}
+            themeVariant={theme.dark ? "dark" : "light"}
+            onChange={(_, date) => {
+              if (date) setEndDate(date);
+            }}
+          />
+        </View>
+      )}
       <Segments
         values={phoneOnly ? ["Dag", "Uke"] : periods}
         value={period}
@@ -146,7 +178,13 @@ export function StepsDetail() {
         {preferences.average && !months && period !== "Dag" && (
           <Copy small>Oransje linje: sjudagers glidende snitt.</Copy>
         )}
-        {period === "Dag" && <Copy small>Skritt per time i dag.</Copy>}
+        {period === "Dag" && (
+          <Copy small>
+            {importedOnly
+              ? "Importerte skritt fordelt etter målingens starttime."
+              : "Skritt per time i dag."}
+          </Copy>
+        )}
       </Card>
       <Card>
         <Title text="Perioden i tall" icon="stats-chart" color={theme.mint} />
@@ -176,14 +214,17 @@ export function StepsDetail() {
           value={`${rows.filter((r) => r.value >= preferences.goal).length} av ${rows.length} dager`}
         />
         <Copy small>
-          Dager uten registrerte målinger inngår ikke i snittet. Dagens tall er
-          foreløpige. Historikken bruker ditt nåværende mål.
+          Dager uten registrerte målinger inngår ikke i snittet. Siste dag kan
+          være ufullstendig. Historikken bruker ditt nåværende mål.
         </Copy>
         {comparison !== undefined && (
           <Copy>
             {number(Math.abs(comparison))} %{" "}
             {comparison >= 0 ? "flere" : "færre"} skritt enn forrige like lange
-            periode. Dagens ufullstendige tall er utelatt.
+            periode.{" "}
+            {importedOnly
+              ? "Siste valgte dag er utelatt fra sammenligningen."
+              : "Dagens ufullstendige tall er utelatt."}
           </Copy>
         )}
       </Card>
@@ -194,6 +235,7 @@ export function StepsDetail() {
           goal={preferences.goal}
           theme={theme}
           days={phoneOnly ? 7 : 91}
+          endDate={today}
         />
       </Card>
     </Page>

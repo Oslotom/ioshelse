@@ -15,6 +15,7 @@ import {
 } from "../components/UI";
 import { useHealth } from "../data/store";
 import { number } from "../data/models";
+import { ImportSteps } from "../components/ImportSteps";
 import { Segments } from "./Analytics";
 
 export function Onboarding() {
@@ -85,6 +86,7 @@ export function Onboarding() {
           void setDemo(true);
         }}
       />
+      <ImportSteps />
       <Button
         label="Fortsett uten tilgang"
         secondary
@@ -201,7 +203,9 @@ export function Settings() {
           value={
             preferences.source === "pedometer"
               ? "iPhonens skritteller"
-              : "Apple Helse"
+              : preferences.source === "import"
+                ? "Importert skritthistorikk"
+                : "Apple Helse"
           }
         />
         <Button
@@ -261,6 +265,7 @@ export function Settings() {
           </Copy>
         )}
       </Card>
+      <ImportSteps />
       <Card>
         <Title text="Dine mål" icon="flag" color={theme.mint} />
         <BigValue value={number(preferences.goal)} unit="skritt per dag" />
@@ -357,7 +362,8 @@ export function Settings() {
         <Copy>
           Opplysningene blir på enheten. VITAL leser fra iPhonens skritteller
           eller, i native bygg, Apple Helse. Ingen konto, analyseverktøy eller
-          server. Kun innstillinger lagres lokalt.
+          server. Innstillinger og eventuell importert skritthistorikk lagres
+          lokalt. Importen kan slettes under Datakilde.
         </Copy>
         <Row label="Versjon" value="1.0.0" />
       </Card>

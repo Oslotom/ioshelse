@@ -130,7 +130,12 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
             theme={theme}
           />
         </View>
-        <Chart data={data.hourly} color={theme.mint} theme={theme} compact />
+        <Chart
+          data={inRange(data.hourly, today, tomorrow)}
+          color={theme.mint}
+          theme={theme}
+          compact
+        />
         <Row
           label={
             distance.length

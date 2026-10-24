@@ -104,3 +104,12 @@ test("dense pulse plots retain original samples, endpoints and local extremes", 
   assert.ok(plot.includes(readings[4321]!));
   assert.ok(plot.every((r) => readings.includes(r)));
 });
+test("moving average preserves calendar gaps and accepts unsorted historical imports", () => {
+  const today = startOfDay(base);
+  const days = [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13].map((i) =>
+    r(addDays(today, i), i),
+  );
+  const result = movingAverage([...days].reverse());
+  assert.equal(result.length, 1);
+  assert.equal(result[0]!.value, 10);
+});

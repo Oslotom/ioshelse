@@ -243,7 +243,7 @@ export function Button({
   );
 }
 export function Status() {
-  const { preferences, error, lastRefresh } = useHealth(),
+  const { preferences, error, lastRefresh, importInfo } = useHealth(),
     t = useVitalTheme();
   return (
     <View style={{ gap: 7 }}>
@@ -264,13 +264,21 @@ export function Status() {
             ? "Demodata · eksempelvisning"
             : preferences.source === "pedometer"
               ? "iPhone · Bevegelse og trening"
-              : "Apple Helse · registrerte målinger"}
+              : preferences.source === "import"
+                ? `Importert skritthistorikk · ${importInfo?.source ?? "Apple Helse-eksport"}`
+                : "Apple Helse · registrerte målinger"}
         </Text>
       </View>
       {!preferences.demo && preferences.source === "pedometer" && (
         <Copy small>
           Ekte skritt · i dag og seks tidligere dager. Ikke data fra Apple
           Helse.
+        </Copy>
+      )}
+      {!preferences.demo && preferences.source === "import" && (
+        <Copy small>
+          Øyeblikksbilde fra en eksport, ikke automatisk oppdaterte data. Bare
+          skritt er importert; puls, søvn og andre målinger er ikke med.
         </Copy>
       )}
       {error && (
@@ -283,11 +291,13 @@ export function Status() {
       )}
       {!preferences.demo && lastRefresh && (
         <Copy small>
-          Hentet kl.{" "}
-          {lastRefresh.toLocaleTimeString("nb-NO", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          {preferences.source === "import" ? "Importert " : "Hentet kl. "}
+          {preferences.source === "import"
+            ? lastRefresh.toLocaleString("nb-NO")
+            : lastRefresh.toLocaleTimeString("nb-NO", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
         </Copy>
       )}
     </View>

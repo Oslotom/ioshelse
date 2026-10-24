@@ -8,6 +8,8 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppState } from "react-native";
+import { ImportInfo, ImportedSteps } from "./apple-export";
+import { readSavedImport, saveImport, eraseImport } from "./import-storage";
 import { Appearance } from "../theme";
 import { emptySnapshot } from "./models";
 import { makeDemo } from "./demo";
@@ -26,7 +28,7 @@ import {
 type Preferences = {
   onboarded: boolean;
   demo: boolean;
-  source: "pedometer" | "healthkit";
+  source: "pedometer" | "healthkit" | "import";
   goal: number;
   miles: boolean;
   appearance: Appearance;
@@ -48,6 +50,7 @@ function useModel() {
     [loading, setLoading] = useState(false),
     [error, setError] = useState<string>();
   const [lastRefresh, setLastRefresh] = useState<Date>();
+  const [importInfo, setImportInfo] = useState<ImportInfo>();
   const generation = useRef(0),
     current = useRef(preferences),
     busy = useRef(false);
@@ -55,7 +58,7 @@ function useModel() {
   useEffect(() => {
     let mounted = true;
     AsyncStorage.getItem("vital.preferences.v1")
-      .then((raw) => {
+      .then(async (raw) => {
         if (!mounted) return;
         if (raw) {
           const p = JSON.parse(raw) as Partial<Preferences>;
@@ -63,7 +66,9 @@ function useModel() {
             ...defaults,
             ...p,
             source:
-              p.source === "pedometer" || p.source === "healthkit"
+              p.source === "pedometer" ||
+              p.source === "healthkit" ||
+              p.source === "import"
                 ? p.source
                 : getHealthKit()
                   ? "healthkit"
@@ -74,6 +79,8 @@ function useModel() {
                 : 10000,
           });
         }
+        const saved = await readSavedImport();
+        if (mounted) setImportInfo(saved?.info);
       })
       .catch(() => {
         if (mounted)
@@ -103,14 +110,27 @@ function useModel() {
     setError(undefined);
     const demo = current.current.demo;
     try {
+      const imported =
+        !demo && current.current.source === "import"
+          ? await readSavedImport()
+          : undefined;
+      if (!demo && current.current.source === "import" && !imported)
+        throw new Error(
+          "Ingen lagret import. Velg en eksportfil under Innstillinger.",
+        );
       const next = demo
         ? makeDemo()
-        : current.current.source === "pedometer"
-          ? await loadPhoneSteps()
-          : await loadHealth();
+        : imported
+          ? imported.snapshot
+          : current.current.source === "pedometer"
+            ? await loadPhoneSteps()
+            : await loadHealth();
       if (ticket === generation.current) {
         setData(next);
-        setLastRefresh(new Date());
+        setLastRefresh(
+          imported ? new Date(imported.info.importedAt) : new Date(),
+        );
+        if (imported) setImportInfo(imported.info);
       }
     } catch (e) {
       if (ticket === generation.current)
@@ -158,6 +178,26 @@ function useModel() {
       );
     }
   }, [setDemo, update]);
+  const activateImport = useCallback(async () => {
+    update({ onboarded: true, source: "import" });
+    await setDemo(false);
+  }, [update, setDemo]);
+  const commitImport = useCallback(
+    async (value: ImportedSteps) => {
+      await saveImport(value);
+      setImportInfo(value.info);
+      await activateImport();
+    },
+    [activateImport],
+  );
+  const removeImport = useCallback(async () => {
+    await eraseImport();
+    setImportInfo(undefined);
+    if (current.current.source === "import") {
+      update({ source: "pedometer" });
+      if (!current.current.demo) await setDemo(false);
+    }
+  }, [update, setDemo]);
   useEffect(() => {
     if (hydrated && preferences.onboarded) void refresh();
   }, [hydrated, preferences.onboarded, refresh]);
@@ -168,7 +208,13 @@ function useModel() {
     return () => subscription.remove();
   }, [refresh]);
   useEffect(() => {
-    if (!hydrated || !preferences.onboarded || preferences.demo) return;
+    if (
+      !hydrated ||
+      !preferences.onboarded ||
+      preferences.demo ||
+      preferences.source === "import"
+    )
+      return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const observe =
       preferences.source === "pedometer" ? observePhoneSteps : observeHealth;
@@ -199,6 +245,11 @@ function useModel() {
     setDemo,
     connect,
     connectPhone,
+    importInfo,
+    activateImport,
+    commitImport,
+    removeImport,
+    importedOnly: !preferences.demo && preferences.source === "import",
     phoneOnly: !preferences.demo && preferences.source === "pedometer",
     healthKitAvailable: !!getHealthKit(),
   };

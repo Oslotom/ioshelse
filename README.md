@@ -27,6 +27,19 @@ Ved avslag: åpne iPhone-innstillingene og gi Expo Go tilgang til Bevegelse og t
 
 Oppdatering skjer ved åpning/aktivering, trekk-for-å-oppdatere og sensormeldinger i forgrunnen, maksimalt én sensorutløst oppdatering per 30 sekunder. Verdiene fra `watchStepCount` telles fra abonnementets start og legges derfor aldri til historiske totaler; appen henter nye, absolutte intervallmålinger. Ingen bakgrunnsovervåking eller lagring av skritthistorikk utover sensorens sju dager.
 
+## Importer eldre skritthistorikk uten Apple Developer-konto
+
+1. Åpne **Helse** på iPhone → profilbildet → **Eksporter alle helsedata**. Lagre eksporten i **Filer**.
+2. Åpne VITAL i Expo Go → **Innstillinger → Importer skritthistorikk → Velg eksportfil**. Velg `export.zip`, eller den utpakkede `export.xml`.
+3. Velg én skrittkilde (for eksempel din iPhone eller Apple Watch), kontroller forhåndsvisningen og trykk **Importer skritthistorikk**. Import kan også startes fra introduksjonsskjermen.
+4. Åpne skrittanalysen fra Oversikt/Aktivitet. Bruk **Historikk til og med** for å velge dato, og Dag/Uke/Måned/6 md./År for intervallet. Importerte timesummer er gruppert etter målingens starttime.
+
+Denne importen tar kun med skritt, ikke puls, søvn, energi eller treningsøkter. Den henter et øyeblikksbilde og oppdaterer ikke Apple Helse. Veksle mellom **Vis lagret import**, **Bruk iPhonens skritteller** og demomodus under Innstillinger. Kildene blandes aldri. Importen kan leses igjen etter omstart; en ny import erstatter den forrige, og avbrutt/ugyldig import erstatter ingenting. **Slett lagret import** sletter bare lokale importdata, aldri originalfilen eller Apple Helse.
+
+ZIP/XML leses i små biter på enheten. Bare skrittmålinger fra valgt kilde lagres i lokal SQLite; den midlertidige filkopien slettes etter lesing. Rå XML, ruter, kliniske data og andre målinger lagres ikke. Ingen data lastes opp. Maksimal filstørrelse og utpakket XML er 512 MB, med opptil 400 000 gyldige skrittmålinger og 100 kilder. Store eksporter kan ta tid; lesingen kan avbrytes.
+
+For å unngå dobbelttelling velges én kilde/enhet, eksakte duplikater fjernes, og overlappende intervaller fra samme kilde utelates med antallet vist i forhåndsvisningen. Skritt plasseres på intervallets startdato/-time i telefonens tidssone. Ingen fordeling over timer/dager estimeres. Summene kan derfor avvike fra Helse-appens sammenslåtte og kildeprioriterte totaler. Importen er heller ikke en automatisk sikkerhetskopi: behold eksportfilen i Filer ved bytte av telefon eller sletting av Expo Go.
+
 ## Bygg med EAS
 
 Prosjektkoblingen, eier og slug ligger allerede i `app.json`. Ingen prosjekt-ID skal opprettes på nytt. Logg inn på Expo med en konto som har tilgang til `oslotom/helse`:
@@ -67,7 +80,7 @@ Tillatelsesskjermen kan fullføres uten å gi lesetilgang. Apple skjuler om lese
 
 Data oppdateres ved aktivering, manuell oppdatering og HealthKit-endringer i forgrunnen. Daglige summer og hvilepuls hentes for 740 dager; puls/HRV/treningsøkter for 60 dager; søvn for åtte dager. Dagvis skrittanalyse viser dagens timer. År og seks måneder viser månedssummer. Ukesammenligninger bruker hele registrerte dager og utelater dagens ufullstendige tall. Dager uten data inngår ikke i gjennomsnittet.
 
-Helseopplysninger holdes i minnet og sendes ikke til en server. Bare preferanser lagres i AsyncStorage. Påminnelser er lokale, valgfrie og inneholder ingen helsemålinger. Ingen kontotjeneste eller analyse-SDK er inkludert.
+Direkte sensor- og HealthKit-målinger holdes i minnet og sendes ikke til en server. Importert skritthistorikk lagres lokalt i SQLite til den erstattes eller slettes. Preferanser lagres i AsyncStorage. Påminnelser er lokale, valgfrie og inneholder ingen helsemålinger. Ingen kontotjeneste eller analyse-SDK er inkludert.
 
 ## Kontroller
 
@@ -78,11 +91,13 @@ npm run export:ios
 npx expo prebuild --platform ios --no-install
 ```
 
-Automatiske tester for sensoradapteren bruker en kontrollert sensorerstatning og dekker tillatelser, avslag, manglende sensor, forespørselsgrenser, sommertid, målte nullverdier, feil og at kun skritt fylles ut. Testene bruker ikke faktisk iPhone-maskinvare. Øvrige tester dekker demototaler, fremtidige målinger, overlappende søvnintervaller, pulsbrudd, datogrenser, bevegelig snitt, komplette ukesammenligninger, nullbaser, månedssummer og kalenderdager. Kjør også `TZ=Europe/Oslo npm test` for sommertid.
+Automatiske tester for sensoradapteren bruker en kontrollert sensorerstatning og dekker tillatelser, avslag, manglende sensor, forespørselsgrenser, sommertid, målte nullverdier, feil og at kun skritt fylles ut. Testene bruker ikke faktisk iPhone-maskinvare. Importtester dekker strømming av ZIP/XML, kildeskille, enhetsnormalisering, duplikater, overlapp, historiske timesummer, ugyldige filer og blokkering av eksterne XML-entiteter. Øvrige tester dekker demototaler, fremtidige målinger, overlappende søvnintervaller, pulsbrudd, datogrenser, bevegelig snitt, komplette ukesammenligninger, nullbaser, månedssummer og kalenderdager. Kjør også `TZ=Europe/Oslo npm test` for sommertid.
 
 Linux-validering: TypeScript, beregningstester, iOS JavaScript/Hermes-bundling og native prosjektgenerering. Dette erstatter ikke et signert EAS/Xcode-bygg eller testing mot HealthKit på en iPhone.
 
 På fysisk iPhone i Expo Go: godta og avslå Bevegelse og trening, gå noen skritt og oppdater, sjekk dagens total/timefordeling og siste sju dager, gå til bakgrunnen og tilbake, og bytt mellom ekte data og demodata. Kontroller at puls/søvn/energi forblir tomme i sensormodus. Core Motion kan rapportere med forsinkelse og ha andre totaler enn Apple Helse.
+
+Test import på fysisk iPhone: velg en Helse-eksport fra Filer/iCloud, avbryt filvalget og lesingen, velg mellom iPhone og Watch, kontroller forhåndsvisningen, importer og bla til en eldre dato. Start appen på nytt og kontroller lagret historikk, bytt til skritteller/demo og tilbake, og test sletting. Import fra Filer og SQLite-persistens må bekreftes på enheten; parser-/beregningstester i Linux erstatter ikke det.
 
 På enheten: kontroller alle faner, diagramvalg, periodeskifte, mål, miles/km, tema, stor tekst, VoiceOver og Reduser bevegelse. Test manglende/delvis/avslått HealthKit-tilgang, demobytte, forgrunnsoppdatering og varslingstillatelser. Sammenlign reelle summer med Apple Helse. Avklar endelig bundle-ID før distribusjon hvis eksisterende Expo-/Apple-app bruker en annen ID.
 

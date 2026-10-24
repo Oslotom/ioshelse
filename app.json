@@ -51,7 +51,8 @@
         {
           "motionPermission": "VITAL bruker iPhonens bevegelsessensor til å vise skritt i dag og de siste dagene. Opplysningene blir på enheten."
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "extra": {
       "eas": {

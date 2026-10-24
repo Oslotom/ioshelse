@@ -302,11 +302,13 @@ export function Heatmap({
   goal,
   theme,
   days = 91,
+  endDate,
 }: {
   data: Reading[];
   goal: number;
   theme: Theme;
   days?: number;
+  endDate?: Date;
 }) {
   const { width } = useWindowDimensions(),
     size = Math.max(8, Math.floor((width - 132) / 13));
@@ -314,7 +316,7 @@ export function Heatmap({
     <View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
         {Array.from({ length: days }, (_, i) => {
-          const date = addDays(startOfDay(new Date()), i - days + 1),
+          const date = addDays(startOfDay(endDate ?? new Date()), i - days + 1),
             value = data.find(
               (r) => +startOfDay(new Date(r.date)) === +date,
             )?.value;
