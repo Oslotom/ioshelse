@@ -1,0 +1,12 @@
+.git/
+node_modules/
+.expo/
+dist/
+coverage/
+ios/
+android/
+legacy/
+.env
+.env.*
+*.xcuserstate
+.DS_Store

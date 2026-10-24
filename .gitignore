@@ -1,4 +1,13 @@
 .DS_Store
+node_modules/
+.expo/
+dist/
+coverage/
+ios/
+android/
+.env
+.env.*
+!.env.example
 DerivedData/
 *.xcuserstate
 xcuserdata/

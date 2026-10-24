@@ -1,47 +1,88 @@
-# VITAL
+# VITAL · Expo
 
-Native iPhone health dashboard in SwiftUI, HealthKit and Swift Charts. All app copy and number/date formatting use Norwegian Bokmål. iOS 17+, Xcode 16+ recommended. No external dependencies, backend or account.
+Norsk iPhone-app for aktivitet, puls, søvn og trender. Bygget med **Expo SDK 58, React Native og TypeScript**, med native HealthKit via `@kingstinct/react-native-healthkit`.
 
-## Run on a Mac
+Expo-prosjekt: [oslotom/helse](https://expo.dev/accounts/oslotom/projects/helse)
 
-1. Open `VITAL.xcodeproj` and select the shared **VITAL** scheme.
-2. Select an iPhone simulator and Run. Choose **Utforsk med demodata** to explore 400 days of deterministic fixtures; every main screen identifies these as **Demodata**.
-3. For actual measurements, select an iPhone, choose your development team in Signing & Capabilities, and use a unique bundle identifier if necessary. Keep the HealthKit capability enabled. Run, tap **Koble til Apple Helse**, and select the desired read permissions. A signing team is intentionally not committed.
-4. To change access later, use Apple Health's profile → Apps → VITAL. HealthKit deliberately does not reveal whether read access was denied; empty data is never reported as proof of successful authorization.
+Project ID: `e8e188fb-bcf6-4a36-b7b6-c63d80a1ac1e`
 
-No installation script or package resolution is necessary. Live readings require a compatible measurement source. iPhone supplies steps; pulse normally comes from a watch or compatible sensor. VITAL never writes health data or substitutes demo values into real mode.
+iOS bundle identifier: `no.oslotom.vital`
 
-## Test on a Mac
+## Kom i gang
 
-Select **Product → Test**, or find an available simulator with `xcrun simctl list devices available` and run:
+Bruk Node.js 22 LTS eller nyere. Fra prosjektroten:
 
 ```sh
-cd /path/to/ioshelse
-xcodebuild -project VITAL.xcodeproj -scheme VITAL \
-  -destination 'platform=iOS Simulator,id=YOUR_SIMULATOR_UUID' \
-  -derivedDataPath /tmp/VITAL-DerivedData CODE_SIGNING_ALLOWED=NO test
+npm ci
+npm start
 ```
 
-The seven XCTest cases cover overlapping sleep intervals, missing pulse gaps, half-open date boundaries, seven-day moving averages, fixture totals, zero comparison baselines and daylight-saving calendar boundaries.
+Velg **Utforsk med demodata** for en tydelig merket demonstrasjon med 400 dagers aktivitet. Demomodus fungerer uten HealthKit og kan også brukes i Expo Go. Faktiske helsemålinger krever et native iOS-bygg; HealthKit er ikke tilgjengelig i Expo Go eller Android. Appen bytter aldri automatisk til falske målinger.
 
-Manual acceptance: explore all tabs, scrub charts, change time ranges and goals, toggle demo mode, deny health access, try an empty Health store, enable larger text/VoiceOver/Reduce Motion, and check dark mode. On device, compare cumulative totals with Apple Health, grant only some permissions, verify timestamps and sources, and background/foreground the app to refresh. Check reminders after allowing and denying notification permission.
+## Bygg med EAS
 
-## Structure
+Prosjektkoblingen, eier og slug ligger allerede i `app.json`. Ingen prosjekt-ID skal opprettes på nytt. Logg inn på Expo med en konto som har tilgang til `oslotom/helse`:
 
-- `AppModel.swift`: MVVM state, local preference persistence, mode switching and foreground refresh.
-- `HealthStore.swift`: read-only HealthKit statistics, sample queries, foreground observers and sleep-source selection.
-- `Models.swift`: measurements, interval math, sleep union, aggregation and deterministic demo fixtures.
-- `Components.swift`: reusable cards, progress rings, interactive Charts and activity heatmap.
-- `Screens.swift`: onboarding, four tabs, steps and pulse analytics, settings and local reminders.
+```sh
+npx eas login
+npx eas project:info
+npm run build:development
+```
 
-Health snapshots stay in memory. Only preferences are saved to UserDefaults; a persistent health-data cache is unnecessary, so SwiftData is not used. Notifications contain no health measurements and run locally at 19:00 when enabled. No networking or analytics SDK is included.
+EAS ber om Apple-signering og registrering av iPhone for interne enhetsbygg. Installasjon på en fysisk iPhone krever gyldig signering. Etter installasjon:
 
-## Data conventions
+```sh
+npm start -- --dev-client
+```
 
-Cumulative metrics use HealthKit statistics queries, avoiding naive summation of overlapping raw device samples. Missing days are excluded from averages and explicitly disclosed. Weekly percentage insights require two complete seven-day histories and exclude today. Other period comparisons disclose incomplete final days. Year/6-month charts use calendar-month sums; daily charts show today's hourly values. Chart scrubbing shows measured values, not interpolated readings. Pulse lines split when samples are more than 15 minutes apart. Sleep duration unions asleep intervals from a selected source; phases only appear when provided by that source. Goal achievement history is recalculated with the current goal.
+For iOS Simulator på Mac:
 
-## Validation status and limitations
+```sh
+npx eas build --platform ios --profile simulator
+```
 
-Created in a Linux cloud workspace without Swift, Xcode, the iOS SDK or simulator. Swift source was parsed with the tree-sitter Swift grammar; the Xcode project, shared scheme, property list and entitlements passed structural parsing. This is **not** an Apple SDK compilation or an executed XCTest run. Build, UI/accessibility checks, signing and actual HealthKit behavior still require the Mac/device steps above.
+For produksjon/TestFlight:
 
-The app uses foreground HealthKit observers and refresh-on-activation, not background delivery. Sleep source selection prefers the source with the most available samples; it is not a user-configurable source picker. Historical pulse samples/workouts load the most recent 60 days, while daily cumulative metrics/resting pulse load 740 days. No medical interpretations are generated. An App Store release additionally needs app icons, distribution signing and release/device validation.
+```sh
+npm run build:ios
+# Send først inn når du selv ønsker publisering:
+npx eas submit --platform ios --profile production
+```
+
+EAS-profiler: `development` (utviklingsklient), `simulator`, `preview` (intern distribusjon) og `production`. Native `ios/` og `android/` genereres av Expo og sjekkes ikke inn. `.easignore` utelater den gamle SwiftUI-appen slik at EAS bygger Expo-prosjektet.
+
+## HealthKit
+
+HealthKit-pluginen legger til lesebeskrivelse på Bokmål og HealthKit-entitlement ved prebuild. Skrivetilgang og bakgrunnslevering er deaktivert. Appen leser skritt, gå-/løpedistanse, puls, hvilepuls, HRV, aktiv energi, treningsminutter, søvn og treningsøkter. Skritt/distanse/energi hentes via kumulative HealthKit-statistikkspørringer; overlappende råprøver summeres ikke manuelt.
+
+Tillatelsesskjermen kan fullføres uten å gi lesetilgang. Apple skjuler om lesetilgang er avslått, så tomme resultater behandles som manglende data eller tilgang, aldri som bekreftet tilkobling. Puls viser kilde og måletidspunkt. Målepauser over 15 minutter gir brudd i pulslinjen. Søvnfaser kommer bare fra registrerte data, med én kilde valgt etter antall prøver; sovetid beregnes som unionen av overlappende intervaller.
+
+Data oppdateres ved aktivering, manuell oppdatering og HealthKit-endringer i forgrunnen. Daglige summer og hvilepuls hentes for 740 dager; puls/HRV/treningsøkter for 60 dager; søvn for åtte dager. Dagvis skrittanalyse viser dagens timer. År og seks måneder viser månedssummer. Ukesammenligninger bruker hele registrerte dager og utelater dagens ufullstendige tall. Dager uten data inngår ikke i gjennomsnittet.
+
+Helseopplysninger holdes i minnet og sendes ikke til en server. Bare preferanser lagres i AsyncStorage. Påminnelser er lokale, valgfrie og inneholder ingen helsemålinger. Ingen kontotjeneste eller analyse-SDK er inkludert.
+
+## Kontroller
+
+```sh
+npm run typecheck
+npm test
+npm run export:ios
+npx expo prebuild --platform ios --no-install
+```
+
+Automatiske tester dekker demototaler, fremtidige målinger, overlappende søvnintervaller, pulsbrudd, datogrenser, bevegelig snitt, komplette ukesammenligninger, nullbaser, månedssummer og kalenderdager. Kjør også `TZ=Europe/Oslo npm test` for sommertid.
+
+Linux-validering: TypeScript, beregningstester, iOS JavaScript/Hermes-bundling og native prosjektgenerering. Dette erstatter ikke et signert EAS/Xcode-bygg eller testing mot HealthKit på en iPhone.
+
+På enheten: kontroller alle faner, diagramvalg, periodeskifte, mål, miles/km, tema, stor tekst, VoiceOver og Reduser bevegelse. Test manglende/delvis/avslått HealthKit-tilgang, demobytte, forgrunnsoppdatering og varslingstillatelser. Sammenlign reelle summer med Apple Helse. Avklar endelig bundle-ID før distribusjon hvis eksisterende Expo-/Apple-app bruker en annen ID.
+
+## Filer
+
+- `src/App.tsx`: native navigasjon, fire faner og detaljskjermer.
+- `src/screens/`: oversikt, aktivitet, trender, skritt, puls og innstillinger.
+- `src/components/`: tilgjengelige diagrammer, kort og designsystem.
+- `src/data/`: HealthKit-adapter, demodata, MVVM-lignende tilstand og beregninger.
+- `app.json` / `eas.json`: Expo- og byggekonfigurasjon.
+- `legacy/swiftui/`: bevart SwiftUI-prototype. Bruk Expo fra prosjektroten til videre utvikling.
+
+EAS-bygg og faktisk HealthKit-tilgang er ikke kjørt i skyarbeidsområdet. Expo-domener må være tilgjengelige og Expo-/Apple-tilgang må brukes gjennom de offisielle innloggingsflytene. Ikke legg nøkler i kildekoden.

@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "VITAL",
+    "slug": "helse",
+    "owner": "oslotom",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "vital",
+    "ios": {
+      "bundleIdentifier": "no.oslotom.vital",
+      "supportsTablet": false,
+      "infoPlist": {
+        "CFBundleDevelopmentRegion": "nb",
+        "CFBundleLocalizations": ["nb"]
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ]
+      }
+    },
+    "android": {
+      "package": "no.oslotom.vital"
+    },
+    "plugins": [
+      "expo-dev-client",
+      "expo-notifications",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ],
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "background": false,
+          "NSHealthShareUsageDescription": "VITAL leser skritt, puls, søvn og aktivitet fra Apple Helse for å vise din personlige oversikt. Opplysningene blir på enheten.",
+          "NSHealthUpdateUsageDescription": false
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e8e188fb-bcf6-4a36-b7b6-c63d80a1ac1e"
+      }
+    },
+    "icon": "./assets/icon.png"
+  }
+}
