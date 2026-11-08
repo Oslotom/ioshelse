@@ -201,3 +201,9 @@ sammenhengende GPS-intervaller. Kilometergrenser fordeles mellom målte punkter;
 pauser og hull inngår ikke i GPS-tiden eller den målte distansen. GPS-tid kan
 avvike fra aktiv tid. Turer uten GPS beholder tid og notater, uten oppdiktet
 rute, tempo eller analyse.
+
+Oversikt har også en samlet graf for søvn (linje med tonet fyll), skritt
+(stolper med referanselinje på 10 000 skritt per dag) og subjektiv dagsform
+(ansikt per dato). Velg 7 eller 14 dager og en sluttdato. Seriene kan skjules
+og vises hver for seg, og hele kortet kan minimeres. Trykk eller dra i grafen
+for detaljer per dato. Manglende registreringer fylles ikke inn med null.

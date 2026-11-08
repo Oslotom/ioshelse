@@ -1,3 +1,4 @@
+import { HealthHistory } from "../components/HealthHistory";
 import { SleepNight } from "../components/SleepNight";
 import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable } from "react-native";
@@ -166,6 +167,7 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
         ready={journal.available}
         loading={journal.loading}
       />
+      <HealthHistory />
       <DailyFormOverview chartOnly />
       <Status />
       <CollapsibleCard
