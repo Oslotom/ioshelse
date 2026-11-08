@@ -227,3 +227,10 @@ Datoer og JSON-filer har webtilpasninger. Kart viser OpenStreetMap og siste
 registrerte posisjon; full rutetegning vises i mobilappen. Apple Helse-import,
 HealthKit og iPhone-skrittelleren brukes i mobilappen. Web er en forhåndsvisning,
 ikke en erstatning for å teste sensorer og native funksjoner på iPhone.
+
+Nettleserversjonen har «Foreslå endring». Aktiver knappen og klikk på et felt
+eller en tekst for å åpne et endringsfelt. «Kopier til chat» lager en melding
+med markeringen og ønsket endring. Lim meldingen inn i Codex-chatten for å få
+endringen utført. Verktøyet sender ingenting til en AI-tjeneste og kan ikke
+pushe kode automatisk. Det finnes ingen direkte forbindelse til den pågående
+Codex-samtalen. Hvis utklippstavlen er sperret, kan meldingen kopieres manuelt.

@@ -1,3 +1,4 @@
+import { ChangeRequest } from "./components/ChangeRequest";
 import { WeightScreen } from "./screens/Weight";
 import { RunningScreen } from "./screens/Running";
 import { RunTrackingProvider } from "./data/run-tracking";
@@ -243,7 +244,11 @@ function Root() {
               component={Tabs}
               options={{ headerShown: false }}
             />
-            <Stack.Screen name="Weight" component={WeightScreen} options={{ title: "Vekt" }} />
+            <Stack.Screen
+              name="Weight"
+              component={WeightScreen}
+              options={{ title: "Vekt" }}
+            />
             <Stack.Screen
               name="Run"
               component={RunningScreen}
@@ -282,6 +287,7 @@ export default function App() {
         <JournalProvider>
           <RunTrackingProvider>
             <Root />
+            <ChangeRequest />
           </RunTrackingProvider>
         </JournalProvider>
       </HealthProvider>
