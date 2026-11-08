@@ -1,3 +1,4 @@
+import { kpiTrends } from "../data/kpi-trends";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { monthlyWorkoutCount } from "../data/journal-stats";
 import React from "react";
@@ -40,19 +41,21 @@ export function JournalKPIs({ entries, ready, loading }: {
   const score = form ? dailyScore(form) : undefined;
   const seconds = sleepDuration(nightSleep(data.sleep, now));
   const workouts = ready && !loading ? monthlyWorkoutCount(entries, now) : undefined;
+  const trends = kpiTrends(data, ready && !loading ? entries : [], now);
+  const trendText = (value: number | undefined) => value === undefined ? "Ingen sammenligning" : `${value > 0 ? "↑ +" : value < 0 ? "↓ −" : "→ "}${number(Math.abs(value), 1)} %`;
   const goal = preferences.goal > 0 ? preferences.goal : undefined;
   const items = [
-    { title: "Skritt", value: stepCount === undefined ? "–" : number(stepCount), color: theme.mint,
+    { trend: trends.steps, comparison: "I går mot dagen før", title: "Skritt", value: stepCount === undefined ? "–" : number(stepCount), color: theme.mint,
       progress: stepCount !== undefined && goal ? stepCount / goal : undefined,
       subtitle: stepCount === undefined ? healthLoading ? "Laster …" : "Ingen data" : "skritt i dag",
       reference: goal ? `Mål ${number(goal)}` : "Ikke satt mål",
       label: stepCount === undefined ? "Skritt i dag: ingen data" : `${number(stepCount)} skritt i dag. Mål ${number(goal ?? 0)} skritt.` },
-    { title: "Dagens form", value: score === undefined ? "–" : number(score, 1), color: theme.orange,
+    { trend: trends.form, comparison: "Mot i går", title: "Dagens form", value: score === undefined ? "–" : number(score, 1), color: theme.orange,
       progress: score === undefined ? undefined : score / 10,
       subtitle: score === undefined ? loading ? "Laster …" : "Ikke registrert" : "av 10",
       reference: "Subjektiv score",
       label: score === undefined ? "Dagens form: ikke registrert" : `Dagens form: ${number(score, 1)} av 10. Subjektiv indikator.` },
-    { title: "Søvn", value: seconds > 0 ? number(seconds / 3600, 1) : "–", color: theme.lavender,
+    { trend: trends.sleep, comparison: "Mot forrige natt", title: "Søvn", value: seconds > 0 ? number(seconds / 3600, 1) : "–", color: theme.lavender,
       progress: seconds > 0 ? seconds / (8 * 3600) : undefined,
       subtitle: seconds > 0 ? "timer i natt" : healthLoading ? "Laster …" : "Ingen data",
       reference: "Referanse 8 t",
@@ -66,14 +69,18 @@ export function JournalKPIs({ entries, ready, loading }: {
         <Donut value={item.value} progress={item.progress} color={item.color} size={width < 390 ? 76 : 86} label={item.label} />
         <Text style={{ fontSize: 11, color: theme.secondary, textAlign: "center" }}>{item.subtitle}</Text>
         <Text style={{ fontSize: 10, color: theme.secondary, textAlign: "center" }}>{item.reference}</Text>
+        <Text style={{ fontSize: 12, fontWeight: "600", color: item.color, textAlign: "center" }}>{trendText(item.trend)}</Text>
+        <Text style={{ fontSize: 10, color: theme.secondary, textAlign: "center" }}>{item.comparison}</Text>
       </View>)}
     </View>
-    <View accessible accessibilityLabel={`${workouts === undefined ? "Ikke lastet" : workouts} loggede treningsøkter denne måneden`}
+    <View accessibilityLabel={`${workouts === undefined ? "Ikke lastet" : workouts} loggede treningsøkter denne måneden`}
       style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 16, backgroundColor: theme.orange + "12" }}>
       <Ionicons name="fitness-outline" size={24} color={theme.orange} />
       <View style={{ flex: 1, gap: 3 }}>
         <Text style={{ color: theme.text, fontSize: 14, fontWeight: "600" }}>Treningsøkter denne måneden</Text>
         <Text style={{ color: theme.secondary, fontSize: 11 }}>Fullførte økter i egen logg · {now.toLocaleDateString("nb-NO", { month: "long" })}</Text>
+        <Text style={{ color: theme.orange, fontSize: 12, fontWeight: "600" }}>{trendText(workouts === undefined ? undefined : trends.workouts)}</Text>
+        <Text style={{ color: theme.secondary, fontSize: 10 }}>Mot samme del av forrige måned</Text>
       </View>
       <Text style={{ color: theme.orange, fontSize: 28, fontWeight: "700" }}>{workouts === undefined ? "–" : number(workouts)}</Text>
     </View>
