@@ -136,7 +136,6 @@ export function HealthHistory() {
             </View>
             <Text style={{ color: theme.text, fontSize: 21, letterSpacing: -0.6, fontWeight: "600", fontVariant: ["tabular-nums"] }}>{stat.value}</Text>
             <Text style={{ color: trends[index] === undefined ? theme.secondary : stat.color, fontSize: 12, fontWeight: "600" }}>{trends[index] === undefined ? "Ingen sammenligning" : `${trends[index]! > 0 ? "↑ +" : trends[index]! < 0 ? "↓ −" : "→ "}${number(Math.abs(trends[index]!), 1)} %`}</Text>
-            <Text style={{ color: theme.secondary, fontSize: 10 }}>{index === 1 ? `${completeDays} hele dager mot forrige periode` : `Snitt mot forrige ${days} dager`}</Text>
             </Pressable>
           </Entrance>
         ))}
