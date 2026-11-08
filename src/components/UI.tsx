@@ -2,6 +2,7 @@ import React, { PropsWithChildren, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   Animated,
+  Easing,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -10,6 +11,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import Svg, { Defs, LinearGradient, Polygon, Stop } from "react-native-svg";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Haptics from "expo-haptics";
 import { useHealth } from "../data/store";
@@ -32,23 +34,77 @@ export function useReduceMotion() {
   }, []);
   return reduce;
 }
+export function Entrance({ children, delay = 0, style }: PropsWithChildren<{ delay?: number; style?: ViewStyle }>) {
+  const progress = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    let active = true;
+    let animation: Animated.CompositeAnimation | undefined;
+    const show = (reduce: boolean) => {
+      animation?.stop();
+      if (reduce) progress.setValue(1);
+      else {
+        animation = Animated.timing(progress, {
+          toValue: 1, duration: 850, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        });
+        animation.start();
+      }
+    };
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", (reduce) => {
+      if (active && reduce) show(true);
+    });
+    void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
+      if (active) show(reduce);
+    }).catch(() => { if (active) progress.setValue(1); });
+    return () => { active = false; animation?.stop(); subscription.remove(); };
+  }, [progress, delay]);
+  return <Animated.View style={[style, { opacity: progress, transform: [
+    { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) },
+    { scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.985, 1] }) },
+  ] }]}>{children}</Animated.View>;
+}
+
 export function Page({ children }: PropsWithChildren) {
+  const [reload, setReload] = useState(0);
   const theme = useVitalTheme(),
     { loading, refresh } = useHealth();
   return (
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <View pointerEvents="none" accessible={false} style={StyleSheet.absoluteFill}>
+        <Svg width="100%" height="100%" viewBox="0 0 400 900" preserveAspectRatio="xMidYMid slice">
+          <Defs>
+            <LinearGradient id="pageGlassMint" x1="0" y1="0" x2="1" y2="1">
+              <Stop offset="0" stopColor={theme.mint} stopOpacity={theme.dark ? 0.035 : 0.045} />
+              <Stop offset="1" stopColor={theme.mint} stopOpacity={0.003} />
+            </LinearGradient>
+            <LinearGradient id="pageGlassLavender" x1="0" y1="0" x2="1" y2="1">
+              <Stop offset="0" stopColor={theme.blue} stopOpacity={0.005} />
+              <Stop offset="1" stopColor={theme.blue} stopOpacity={theme.dark ? 0.04 : 0.05} />
+            </LinearGradient>
+          </Defs>
+          <Polygon points="-80,100 130,20 240,210 30,330" fill="url(#pageGlassMint)" stroke={theme.mint} strokeOpacity={0.025} />
+          <Polygon points="250,230 490,160 440,460 210,510" fill="url(#pageGlassLavender)" stroke={theme.lavender} strokeOpacity={0.03} />
+          <Polygon points="-90,650 100,490 240,720 60,940" fill="url(#pageGlassLavender)" stroke={theme.lavender} strokeOpacity={0.02} />
+          <Polygon points="290,650 460,540 510,900 230,960" fill="url(#pageGlassMint)" stroke={theme.mint} strokeOpacity={0.02} />
+        </Svg>
+      </View>
     <ScrollView
-      style={{ flex: 1, backgroundColor: theme.background }}
+      style={{ flex: 1 }}
       contentContainerStyle={styles.page}
       refreshControl={
         <RefreshControl
           refreshing={loading}
-          onRefresh={() => void refresh()}
+          onRefresh={() => {
+            void refresh().finally(() => setReload((value) => value + 1));
+          }}
           tintColor={theme.mint}
         />
       }
     >
-      {children}
+      {React.Children.toArray(children).map((child, index) => (
+        <Entrance key={`${reload}-${React.isValidElement(child) ? child.key ?? index : index}`} delay={Math.min(index * 65, 390)}>{child}</Entrance>
+      ))}
     </ScrollView>
+    </View>
   );
 }
 export function Card({
@@ -317,14 +373,14 @@ export function WeekSummary() {
   );
 }
 export const styles = StyleSheet.create({
-  page: { padding: 20, gap: 20, paddingBottom: 36 },
+  page: { paddingVertical: 20, paddingHorizontal: 24, gap: 20, paddingBottom: 36 },
   card: {
-    borderRadius: 26,
+    borderRadius: 24,
     padding: 22,
     gap: 16,
-    shadowColor: "#18282C",
-    shadowOpacity: 0.025,
-    shadowRadius: 14,
+    shadowColor: "#85A9D0",
+    shadowOpacity: 0.07,
+    shadowRadius: 16,
     shadowOffset: { width: 0, height: 5 },
   },
   title: { flexDirection: "row", alignItems: "center", gap: 8 },

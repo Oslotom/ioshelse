@@ -1,3 +1,4 @@
+import { TrainingCalendar } from "../components/TrainingCalendar";
 import { HealthHistory } from "../components/HealthHistory";
 import { SleepNight } from "../components/SleepNight";
 import React, { useEffect, useRef } from "react";
@@ -130,16 +131,6 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
         }}
       >
         <View style={{ gap: 5 }}>
-          <Text
-            style={{
-              fontSize: 10,
-              fontWeight: "700",
-              letterSpacing: 4,
-              color: theme.secondary,
-            }}
-          >
-            VITAL
-          </Text>
           <Heading>{greeting}</Heading>
           <Copy>
             {new Date().toLocaleDateString("nb-NO", {
@@ -168,6 +159,7 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
         ready={journal.available}
         loading={journal.loading}
       />
+      <TrainingCalendar />
       <DailyFormOverview chartOnly />
       <Status />
       <CollapsibleCard

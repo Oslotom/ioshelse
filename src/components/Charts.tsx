@@ -1,3 +1,4 @@
+import { DrawingPath, GrowingBar, GraphReveal } from "./GraphReveal";
 import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
 import Svg, { Rect, Line, Circle, Path } from "react-native-svg";
@@ -145,7 +146,7 @@ export function Chart({
         onResponderGrant={(e) => select(e.nativeEvent.locationX)}
         onResponderMove={(e) => select(e.nativeEvent.locationX)}
       >
-        <Svg width={width} height={height}>
+        <GraphReveal><Svg width={width} height={height}>
           {!compact &&
             [0.25, 0.5, 0.75].map((v) => (
               <Line
@@ -162,13 +163,13 @@ export function Chart({
             ? groups.map((group, i) => (
                 <React.Fragment key={i}>
                   {!compact && group.length > 1 && (
-                    <Path
+                    <DrawingPath
                       d={`${group.map((r, j) => `${j ? "L" : "M"}${timeX(r.date)},${y(r.value)}`).join(" ")} L${timeX(group.at(-1)!.date)},${height - padding} L${timeX(group[0]!.date)},${height - padding} Z`}
                       fill={color}
                       opacity={0.07}
                     />
                   )}
-                  <Path
+                  <DrawingPath
                     d={group
                       .map(
                         (r, j) =>
@@ -191,7 +192,7 @@ export function Chart({
                 </React.Fragment>
               ))
             : data.map((r, i) => (
-                <Rect
+                <GrowingBar
                   key={i}
                   x={
                     x(i) - Math.max(2, ((width - 24) / data.length) * 0.68) / 2
@@ -205,7 +206,7 @@ export function Chart({
                 />
               ))}
           {!line && average.length > 1 && (
-            <Path
+            <DrawingPath
               d={average
                 .map((r, i) => `${i ? "L" : "M"}${timeX(r.date)},${y(r.value)}`)
                 .join(" ")}
@@ -224,7 +225,7 @@ export function Chart({
               strokeDasharray="3 4"
             />
           )}
-        </Svg>
+        </Svg></GraphReveal>
       </View>
       {!compact && data.length > 960 && (
         <Text style={{ color: theme.secondary, fontSize: 11 }}>
@@ -267,7 +268,7 @@ export function Ring({
       accessible
       accessibilityLabel={`${number(progress * 100)} prosent av målet på ${number(goal)} skritt`}
     >
-      <Svg width={108} height={108} style={StyleSheet.absoluteFill}>
+      <GraphReveal style={StyleSheet.absoluteFill}><Svg width={108} height={108}>
         <Circle
           cx={54}
           cy={54}
@@ -291,7 +292,7 @@ export function Ring({
           rotation={-90}
           origin="54,54"
         />
-      </Svg>
+      </Svg></GraphReveal>
       <Text style={{ color: theme.mint, fontSize: 24, fontWeight: "700" }}>
         {progress >= 1 ? "✓" : "↗"}
       </Text>
@@ -317,7 +318,7 @@ export function Heatmap({
   const { width } = useWindowDimensions(),
     size = Math.max(8, Math.floor((width - 132) / 13));
   return (
-    <View>
+    <GraphReveal>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
         {Array.from({ length: days }, (_, i) => {
           const date = addDays(startOfDay(endDate ?? new Date()), i - days + 1),
@@ -346,7 +347,7 @@ export function Heatmap({
       <Text style={{ color: theme.secondary, fontSize: 11, marginTop: 12 }}>
         {days} dager · mørkere farge betyr nærmere målet
       </Text>
-    </View>
+    </GraphReveal>
   );
 }
 const styles = StyleSheet.create({
@@ -380,14 +381,14 @@ export function SleepTimeline({
   const time = (stamp: number) => new Date(stamp).toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
   return (
     <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} style={{ gap: 8 }}>
-      <Svg width={width} height={chartHeight} accessible
+      <GraphReveal><Svg width={width} height={chartHeight} accessible
         accessibilityLabel="Tidslinje for registrerte søvnfaser. Opphold betyr manglende data.">
         {stages.map((stage) => <Line key={stage} x1={45} x2={width - 10} y1={y(stage)} y2={y(stage)} stroke={theme.track} strokeDasharray="3 4" />)}
         {segments.map((segment, index) => {
           const next = segments[index + 1];
           const color = segment.stage === "Våken" ? theme.orange : segment.stage === "Dyp" ? theme.lavender : theme.mint;
           return <React.Fragment key={index}>
-            <Rect x={x(segment.start)} y={y(segment.stage) - 6}
+            <GrowingBar x={x(segment.start)} y={y(segment.stage) - 6}
               width={Math.max(1, x(segment.end) - x(segment.start))} height={12} rx={5}
               fill={color} opacity={0.18} />
             <Line x1={x(segment.start)} x2={x(segment.end)} y1={y(segment.stage)} y2={y(segment.stage)}
@@ -396,7 +397,7 @@ export function SleepTimeline({
               y1={y(segment.stage)} y2={y(next.stage)} stroke={theme.mint} strokeWidth={1.5} opacity={0.5} />}
           </React.Fragment>;
         })}
-      </Svg>
+      </Svg></GraphReveal>
       <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, height: chartHeight }}>
         {stages.map((stage) => <Text key={stage} style={{ position: "absolute", top: y(stage) - 7, color: theme.secondary, fontSize: 10 }}>{stage}</Text>)}
       </View>

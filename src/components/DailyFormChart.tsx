@@ -1,3 +1,4 @@
+import { DrawingPath, GrowingBar, GraphReveal } from "./GraphReveal";
 import React, { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import Svg, { Circle, Line, Path, Text as SVGText } from "react-native-svg";
@@ -128,7 +129,7 @@ export function DailyFormChart({
         onResponderGrant={(event) => closest(event.nativeEvent.locationX)}
         onResponderMove={(event) => closest(event.nativeEvent.locationX)}
       >
-        <Svg width={width} height={height}>
+        <GraphReveal><Svg width={width} height={height}>
           {[1, 5, 10].map((value) => (
             <React.Fragment key={value}>
               <Line
@@ -151,7 +152,7 @@ export function DailyFormChart({
           {plotted.map((groups, index) =>
             groups.map((group, i) => (
               <React.Fragment key={`${index}-${i}`}>
-                <Path
+                <DrawingPath
                   d={group
                     .map(
                       (point, j) =>
@@ -184,7 +185,7 @@ export function DailyFormChart({
               strokeDasharray="3 4"
             />
           )}
-        </Svg>
+        </Svg></GraphReveal>
       </View>
       <View
         style={{

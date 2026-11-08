@@ -1,3 +1,4 @@
+import { DrawingPath, GrowingBar, GraphReveal } from "./GraphReveal";
 import React from "react";
 import { Text, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
@@ -61,10 +62,10 @@ export function Sparkline({
       accessibilityLabel={`${label}: minigraf med ${data.length} registrerte verdier`}
       pointerEvents="none"
     >
-      <Svg width={82} height={32}>
+      <GraphReveal><Svg width={82} height={32}>
         {groups.map((group, index) => (
           <React.Fragment key={index}>
-            <Path
+            <DrawingPath
               d={group
                 .map((r, i) => `${i ? "L" : "M"}${x(r)},${y(r)}`)
                 .join(" ")}
@@ -79,7 +80,7 @@ export function Sparkline({
             ))}
           </React.Fragment>
         ))}
-      </Svg>
+      </Svg></GraphReveal>
     </View>
   );
 }

@@ -1,5 +1,10 @@
+import { AIAnalysis } from "./AIAnalysis";
+import { TotalScore } from "./TotalScore";
+import { HealthDetailSheet } from "./HealthDetailSheet";
+import { DrawingPath, GrowingBar, GraphReveal } from "./GraphReveal";
 import React, { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Svg, {
   Circle,
@@ -11,53 +16,68 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from "react-native-svg";
-import { useHealth } from "../data/store";
 import { useJournal } from "../data/journal-store";
+import { useHealth } from "../data/store";
 import {
   addDays,
-  dateLabel,
   inRange,
   number,
-  startOfDay,
   sum,
+  dateLabel,
+  startOfDay,
+  sleepDuration,
 } from "../data/models";
 import { dailyEntries, dailyScore, dayKey } from "../data/daily-form";
 import { sleepHistory, sleepTime } from "../data/sleep";
-import { CollapsibleCard } from "./CollapsibleCard";
-import { useVitalTheme } from "./UI";
+import { Entrance, useVitalTheme } from "./UI";
 
 export function HealthHistory() {
+  const journal = useJournal();
   const { data } = useHealth(),
-    journal = useJournal(),
     theme = useVitalTheme();
+  const [detail, setDetail] = useState<"sleep" | "steps" | "form">();
   const [periodOpen, setPeriodOpen] = useState(false);
-  const [days, setDays] = useState<7 | 14>(7),
-    [ending, setEnding] = useState(new Date());
-  const [visible, setVisible] = useState({
-    sleep: true,
-    steps: true,
-    form: true,
-  });
+  const [days, setDays] = useState<7 | 14 | 30>(7);
+  const [ending, setEnding] = useState(new Date());
   const [width, setWidth] = useState(280),
     [selected, setSelected] = useState<string>();
-  const rows = useMemo(() => {
-    const forms = new Map(
-      dailyEntries(journal.data.entries).map((entry) => [entry.day, entry]),
-    );
-    return sleepHistory(data.sleep, ending, days).map((night) => {
-      const date = new Date(night.date),
-        steps = inRange(data.steps, date, addDays(date, 1)),
-        form = forms.get(dayKey(date));
-      return {
-        ...night,
-        day: dayKey(date),
-        steps: steps.length ? sum(steps) : undefined,
-        score: form ? dailyScore(form) : undefined,
-      };
-    });
-  }, [data.sleep, data.steps, journal.data.entries, ending, days]);
-  const plotWidth = Math.max(1, width - 58),
-    x = (i: number) => 29 + (plotWidth * (i + 0.5)) / days;
+  const history = useMemo(() => sleepHistory(data.sleep, ending, days), [data.sleep, ending, days]);
+  const example = !history.some((night) => night.seconds > 0);
+  const forms = dailyEntries(journal.data.entries);
+  const stepRows = inRange(data.steps, startOfDay(new Date(history[0]!.date)), addDays(startOfDay(ending), 1));
+  const formRows = forms.filter((entry) => entry.day >= dayKey(new Date(history[0]!.date)) && entry.day <= dayKey(ending));
+  const stepsExample = !stepRows.length;
+  const formExample = !formRows.length;
+  const rows = history.map((night, index) => {
+    const date = startOfDay(new Date(night.date));
+    const day = dayKey(date);
+    const steps = inRange(stepRows, date, addDays(date, 1));
+    const form = formRows.find((entry) => entry.day === day);
+    const seconds = example ? Math.round([3.8, 9.6, 5.1, 7.4, 4.2, 10.3, 6.0, 8.8, 4.7, 6.4, 9.9, 5.5, 7.9, 3.6, 8.2, 10.1, 4.9, 6.8, 9.1, 5.8, 7.2, 4.0, 8.6, 6.1, 10.5, 5.3, 7.7, 4.5, 9.4, 6.6][index]! * 60) * 60 : night.seconds;
+    const deep = example ? Math.round(seconds * [0.1, 0.29, 0.14, 0.25, 0.08, 0.32, 0.19, 0.27, 0.12, 0.22][index % 10]! / 60) * 60 : sleepDuration(night.segments.filter((segment) => segment.stage === "Dyp"));
+    const rem = example ? Math.round(seconds * [0.16, 0.3, 0.23, 0.14, 0.28, 0.2, 0.33, 0.18, 0.26, 0.21][index % 10]! / 60) * 60 : sleepDuration(night.segments.filter((segment) => segment.stage === "REM"));
+    const light = example ? seconds - deep - rem : sleepDuration(night.segments.filter((segment) => segment.stage === "Lett"));
+    const stageScale = deep + rem + light > seconds ? seconds / (deep + rem + light) : 1;
+    return {
+      ...night, day, seconds,
+      deep: deep * stageScale, rem: rem * stageScale, light: light * stageScale,
+      unknown: Math.max(0, seconds - (deep + rem + light) * stageScale),
+      sleepScore: example ? [78, 84, 63, 88, 72, 90, 93][index % 7]! : undefined,
+      steps: stepsExample ? [1450, 19480, 3820, 12650, 620, 24180, 7340, 2150, 16320, 5890, 10840, 910, 22370, 8470, 4560, 17890, 1320, 11860, 26740, 6380, 2940, 15420, 9720, 780, 20160, 5230, 13780, 1860, 23450, 8020][index]! : steps.length ? sum(steps) : undefined,
+      score: formExample ? [6.2, 7.4, 4.5, 8.1, 6.5, 9.2, 8.5][index % 7]! : form ? dailyScore(form) : undefined,
+    };
+  });
+  const sleepRows = rows.filter((row) => row.seconds > 0);
+  const scores = rows.flatMap((row) => row.score === undefined ? [] : [row.score]);
+  const stats = [
+    { label: "S\u00f8vn", value: sleepRows.length ? sleepTime(sleepRows.reduce((total, row) => total + row.seconds, 0) / sleepRows.length) : "Ingen data", detail: "Snitt per natt", example, color: theme.lavender },
+    { label: "Skritt", value: number(rows.reduce((total, row) => total + (row.steps ?? 0), 0)), detail: `Totalt siste ${days} dager`, example: stepsExample, color: theme.mint },
+    { label: "Form", value: scores.length ? `${number(scores.reduce((total, score) => total + score, 0) / scores.length, 1)} / 10` : "Ingen data", detail: "Gjennomsnitt", example: formExample, color: theme.orange },
+  ];
+  const formColor = (score: number) => score < 5 ? theme.coral : score < 7 ? theme.orange : theme.mint;
+  const accent = theme.blue;
+  const plotWidth = Math.max(1, width - 32),
+    x = (i: number) => 16 + (plotWidth * i) / (days - 1);
   const maxHours = Math.max(10, ...rows.map((row) => row.seconds / 3600));
   const maxSteps = Math.max(12500, ...rows.map((row) => row.steps ?? 0));
   const bottom = 182,
@@ -66,61 +86,41 @@ export function HealthHistory() {
   const ySteps = (steps: number) => bottom - (steps / maxSteps) * height;
   const groups: number[][] = [];
   rows.forEach((row, index) => {
-    if (!row.seconds) return;
+    if (row.steps === undefined) return;
     const last = groups.at(-1);
     if (last && last.at(-1) === index - 1) last.push(index);
     else groups.push([index]);
   });
+  const sleepStages = [
+    { key: "deep", label: "Dyp", color: theme.blue },
+    { key: "rem", label: "REM", color: "#B0CCE7" },
+    { key: "light", label: "Lett", color: theme.lightBlue },
+    { key: "unknown", label: "Uspesifisert", color: theme.track },
+  ] as const;
   const chosen = rows.find((row) => row.day === selected) ?? rows.at(-1)!;
-  const face = (score: number) =>
-    score < 3
-      ? "😭"
-      : score < 5
-        ? "🙁"
-        : score < 7
-          ? "😐"
-          : score < 9
-            ? "🙂"
-            : "😄";
   const choose = (position: number) =>
     setSelected(
       rows[
         Math.max(
           0,
-          Math.min(days - 1, Math.floor(((position - 29) / plotWidth) * days)),
+          Math.min(days - 1, Math.round(((position - 16) / plotWidth) * (days - 1))),
         )
       ]!.day,
     );
   return (
-    <CollapsibleCard
-      title="Hovedgraf"
-      style={{ marginHorizontal: -20, borderRadius: 0, shadowOpacity: 0 }}
-      icon="analytics-outline"
-      color={theme.lavender}
-      summary={`${days} dager · til ${dateLabel(ending)}`}
-      sparkline={rows
-        .filter((row) => row.seconds > 0)
-        .map((row) => ({ date: row.date, value: row.seconds / 3600 }))}
-      sparklineLabel="Søvntimer"
-    >
-      <View style={{ alignItems: "flex-end" }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Velg periode for hovedgrafen"
-          accessibilityState={{ expanded: periodOpen }}
-          onPress={() => setPeriodOpen((open) => !open)}
-          style={{
-            minHeight: 44,
-            paddingHorizontal: 14,
-            borderRadius: 14,
-            backgroundColor: theme.track,
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ color: theme.text, fontSize: 13, fontWeight: "600" }}>
-            {days} dager · {dateLabel(ending)} {periodOpen ? "⌃" : "⌄"}
-          </Text>
-        </Pressable>
+    <View style={{ paddingVertical: 8, gap: 18 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+        {stats.map((stat, index) => (
+          <Entrance delay={100 + index * 85} key={stat.label} style={{ flexGrow: 1, flexBasis: 90, paddingHorizontal: 12, paddingVertical: 16, gap: 8 }}>
+            <Pressable accessibilityRole="button" accessibilityLabel={`Vis detaljer for ${stat.label}`} onPress={() => setDetail((["sleep", "steps", "form"] as const)[index])} style={{ gap: 8, minHeight: 60 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View style={{ width: 5, height: 14, borderRadius: 3, backgroundColor: stat.color }} />
+              <Text style={{ color: theme.secondary, fontSize: 12, fontWeight: "500" }}>{stat.label}</Text>
+            </View>
+            <Text style={{ color: theme.text, fontSize: 21, letterSpacing: -0.6, fontWeight: "600", fontVariant: ["tabular-nums"] }}>{stat.value}</Text>
+            </Pressable>
+          </Entrance>
+        ))}
       </View>
       {periodOpen && (
         <View
@@ -133,34 +133,15 @@ export function HealthHistory() {
             gap: 6,
           }}
         >
-          {([7, 14] as const).map((period) => (
-            <Pressable
-              key={period}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: days === period }}
-              onPress={() => {
-                setDays(period);
-                setPeriodOpen(false);
-              }}
-              style={{
-                minHeight: 44,
-                paddingHorizontal: 12,
-                justifyContent: "center",
-                borderRadius: 10,
-                backgroundColor:
-                  days === period ? theme.lavender + "18" : "transparent",
-              }}
-            >
-              <Text
-                style={{
-                  color: days === period ? theme.lavender : theme.text,
-                  fontWeight: "600",
-                }}
-              >
-                {period} dager{days === period ? "  ✓" : ""}
-              </Text>
-            </Pressable>
-          ))}
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {([7, 14, 30] as const).map((period) => (
+              <Pressable key={period} accessibilityRole="radio" accessibilityState={{ checked: days === period }}
+                onPress={() => { setDays(period); setSelected(undefined); setPeriodOpen(false); }}
+                style={{ flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center", borderRadius: 12, backgroundColor: days === period ? accent + "22" : theme.track }}>
+                <Text style={{ color: days === period ? accent : theme.text, fontWeight: "600" }}>{period} dager</Text>
+              </Pressable>
+            ))}
+          </View>
           <View
             style={{
               flexDirection: "row",
@@ -181,6 +162,7 @@ export function HealthHistory() {
               onChange={(_, value) => {
                 if (value) {
                   setEnding(startOfDay(value));
+                  setSelected(undefined);
                   setPeriodOpen(false);
                 }
               }}
@@ -188,55 +170,15 @@ export function HealthHistory() {
           </View>
         </View>
       )}
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-        {(
-          [
-            { key: "sleep", label: "Søvn", color: theme.lavender },
-            { key: "steps", label: "Skritt", color: theme.mint },
-            { key: "form", label: "Form", color: theme.orange },
-          ] as const
-        ).map((series) => (
-          <Pressable
-            key={series.key}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: visible[series.key] }}
-            accessibilityLabel={`Vis ${series.label.toLowerCase()}`}
-            onPress={() =>
-              setVisible((current) => ({
-                ...current,
-                [series.key]: !current[series.key],
-              }))
-            }
-            style={{
-              minHeight: 44,
-              paddingHorizontal: 13,
-              borderRadius: 13,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              backgroundColor: visible[series.key]
-                ? series.color + "22"
-                : theme.track,
-            }}
-          >
-            <Text
-              style={{
-                color: visible[series.key] ? series.color : theme.secondary,
-              }}
-            >
-              {visible[series.key] ? "●" : "○"} {series.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <GraphReveal>
       <View
-        style={{ marginHorizontal: -22 }}
+        style={{ marginTop: 8 }}
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel="Daglig søvn, skritt og form. Dra eller bruk neste og forrige dato."
         accessibilityValue={{
-          text: `${dateLabel(chosen.date)}. Søvn: ${chosen.seconds ? sleepTime(chosen.seconds) : "ingen data"}. Skritt: ${chosen.steps ?? "ingen data"}. Form: ${chosen.score === undefined ? "ikke registrert" : number(chosen.score, 1)}`,
+          text: `${example ? "Eksempeldata. " : ""}${dateLabel(chosen.date)}. ${chosen.seconds ? sleepTime(chosen.seconds) : "Ingen sove-data"}. Skritt: ${chosen.steps ?? "Ingen data"}${stepsExample ? " (eksempeldata)" : ""}. Form: ${chosen.score ?? "Ingen data"}${formExample ? " (eksempeldata)" : ""}`,
         }}
         accessibilityActions={[
           { name: "increment", label: "Neste dato" },
@@ -262,150 +204,108 @@ export function HealthHistory() {
         onResponderGrant={(event) => choose(event.nativeEvent.locationX)}
         onResponderMove={(event) => choose(event.nativeEvent.locationX)}
       >
-        <Svg width={width} height={visible.form ? 250 : 220}>
+        <Svg width={width} height={220}>
           <Defs>
-            <LinearGradient id="sleepHistoryFade" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={theme.lavender} stopOpacity={0.3} />
-              <Stop offset="1" stopColor={theme.lavender} stopOpacity={0.01} />
+            <LinearGradient id="stepsHistoryFade" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={theme.mint} stopOpacity={0.3} />
+              <Stop offset="0.6" stopColor={theme.mint} stopOpacity={0.12} />
+              <Stop offset="1" stopColor={theme.mint} stopOpacity={0.02} />
             </LinearGradient>
           </Defs>
-          {[0, 0.5, 1].map((fraction) => (
-            <React.Fragment key={fraction}>
-              <Line
-                x1={29}
-                x2={width - 29}
-                y1={bottom - fraction * height}
-                y2={bottom - fraction * height}
-                stroke={theme.track}
-              />
-              {visible.sleep && (
-                <SvgText
-                  x={0}
-                  y={bottom - fraction * height + 4}
-                  fontSize={9}
-                  fill={theme.lavender}
-                >
-                  {number(maxHours * fraction, 0)} t
-                </SvgText>
-              )}
-              {visible.steps && (
-                <SvgText
-                  x={width}
-                  textAnchor="end"
-                  y={bottom - fraction * height + 4}
-                  fontSize={9}
-                  fill={theme.mint}
-                >
-                  {number((maxSteps * fraction) / 1000, 1)}k
-                </SvgText>
-              )}
-            </React.Fragment>
-          ))}
-          {visible.steps &&
-            rows.map(
-              (row, index) =>
-                row.steps !== undefined && (
-                  <Rect
-                    key={row.day}
-                    x={x(index) - (plotWidth / days) * 0.3}
-                    y={ySteps(row.steps)}
-                    width={(plotWidth / days) * 0.6}
-                    height={Math.max(1, bottom - ySteps(row.steps))}
-                    rx={3}
-                    fill={theme.mint}
-                    opacity={0.65}
-                  />
-                ),
-            )}
-          {visible.steps && (
-            <>
-              <Line
-                x1={29}
-                x2={width - 29}
-                y1={ySteps(10000)}
-                y2={ySteps(10000)}
-                stroke={theme.mint}
-                strokeDasharray="4 4"
-              />
-              <SvgText
-                x={31}
-                y={ySteps(10000) - 5}
-                fontSize={9}
-                fill={theme.mint}
-              >
-                Mål 10 000
-              </SvgText>
-            </>
-          )}
-          {visible.sleep &&
+          {rows.map((row, index) => {
+            let accumulated = 0;
+            return sleepStages.map((stage) => {
+              const seconds = row[stage.key];
+              const base = accumulated;
+              accumulated += seconds;
+              if (seconds <= 0) return null;
+              return <GrowingBar key={`${row.day}-${stage.key}`} x={x(index) - Math.min(24, plotWidth / days * 0.48) / 2}
+                y={ySleep(accumulated)} width={Math.min(24, plotWidth / days * 0.48)}
+                height={Math.max(0, ySleep(base) - ySleep(accumulated))} rx={0} fill={stage.color} opacity={selected === row.day ? 1 : 0.85} />;
+            });
+          })}
+          {
             groups.map((group, index) => {
               const path = group
                 .map(
                   (i, j) =>
-                    `${j ? "L" : "M"}${x(i)},${ySleep(rows[i]!.seconds)}`,
+                    `${j ? "L" : "M"}${x(i)},${ySteps(rows[i]!.steps!)}`,
                 )
                 .join(" ");
               return (
                 <React.Fragment key={index}>
                   {group.length > 1 && (
-                    <Path
+                    <DrawingPath
                       d={`${path} L${x(group.at(-1)!)},${bottom} L${x(group[0]!)},${bottom} Z`}
-                      fill="url(#sleepHistoryFade)"
+                      fill="url(#stepsHistoryFade)"
                     />
                   )}
-                  <Path
+                  <DrawingPath
                     d={path}
-                    stroke={theme.lavender}
-                    strokeWidth={2.5}
+                    stroke={theme.mint}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     fill="none"
                   />
                   {group.map((i) => (
                     <Circle
                       key={i}
                       cx={x(i)}
-                      cy={ySleep(rows[i]!.seconds)}
-                      r={3}
-                      fill={theme.lavender}
+                      cy={ySteps(rows[i]!.steps!)}
+                      r={rows[i]!.day === selected ? 4.5 : days === 30 ? 2.5 : 3.5}
+                      fill={theme.mint}
+                      stroke={theme.background}
+                      strokeWidth={1.5}
                     />
                   ))}
                 </React.Fragment>
               );
             })}
-          <Line
+          {selected && <Line
             x1={x(rows.indexOf(chosen))}
             x2={x(rows.indexOf(chosen))}
             y1={24}
             y2={bottom}
             stroke={theme.secondary}
             strokeDasharray="2 4"
-            opacity={0.5}
-          />
-          {rows.map((row, index) => (
+            opacity={0.35}
+          />}
+          {rows.map((row, index) => (index === 0 || index === days - 1 || (index % Math.ceil((days - 1) / 5) === 0 && index < days - 3)) && (
             <React.Fragment key={row.day}>
               <SvgText
                 x={x(index)}
                 y={203}
-                textAnchor="middle"
+                textAnchor={index === 0 ? "start" : index === days - 1 ? "end" : "middle"}
                 fontSize={10}
                 fill={theme.secondary}
               >
-                {new Date(row.date).getDate()}
+                {`${new Date(row.date).getDate()}.${String(new Date(row.date).getMonth() + 1).padStart(2, "0")}`}
               </SvgText>
-              {visible.form && (
-                <SvgText
-                  x={x(index)}
-                  y={233}
-                  textAnchor="middle"
-                  fontSize={days === 7 ? 19 : 14}
-                  fill={theme.secondary}
-                >
-                  {row.score === undefined ? "–" : face(row.score)}
-                </SvgText>
-              )}
             </React.Fragment>
           ))}
         </Svg>
+        <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: 182 }}>
+          {rows.map((row, index) => row.score !== undefined && (
+            <View key={`form-${row.day}`} style={{ position: "absolute", left: x(index) - (days === 30 ? 8 : 12), top: bottom - ((row.score - 1) / 9) * height - 12,
+              width: days === 30 ? 16 : 24, height: days === 30 ? 16 : 24, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: theme.background }}>
+              <Ionicons name={row.score < 5 ? "sad-outline" : "happy-outline"}
+                size={days === 30 ? 16 : days === 14 ? 20 : 24} color={formColor(row.score)} />
+            </View>
+          ))}
+        </View>
       </View>
-    </CollapsibleCard>
+      </GraphReveal>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <Text style={{ color: theme.secondary, fontSize: 12 }}>{dateLabel(rows[0]!.date)} - {dateLabel(ending)}{example || stepsExample || formExample ? " \u00b7 Eksempeldata" : ""}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Velg periode og sluttdato" accessibilityState={{ expanded: periodOpen }}
+          onPress={() => setPeriodOpen((open) => !open)} style={{ minHeight: 44, paddingHorizontal: 12, justifyContent: "center" }}>
+          <Text style={{ color: theme.secondary, fontSize: 12 }}>{days} dager ⌄</Text>
+        </Pressable>
+      </View>
+      <TotalScore rows={rows} example={example || stepsExample || formExample} />
+      <AIAnalysis />
+      {detail && <HealthDetailSheet metric={detail} rows={rows} example={detail === "sleep" ? example : detail === "steps" ? stepsExample : formExample} onClose={() => setDetail(undefined)} />}
+    </View>
   );
 }

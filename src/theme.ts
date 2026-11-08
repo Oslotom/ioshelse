@@ -1,9 +1,12 @@
 import { useColorScheme } from "react-native";
 export const colors = {
-  mint: "#39B8A5",
-  coral: "#FF647C",
-  lavender: "#8175E8",
-  orange: "#F4A261",
+  mint: "#46DD9C",
+  blue: "#85A9D0",
+  lightBlue: "#DDEDFD",
+  lightMint: "#ADEDE1",
+  coral: "#D995A5",
+  lavender: "#85A9D0",
+  orange: "#D8B681",
 };
 export type Appearance = "light" | "dark" | "system";
 export function useTheme(appearance: Appearance = "light") {
@@ -13,11 +16,11 @@ export function useTheme(appearance: Appearance = "light") {
   return {
     ...colors,
     dark,
-    background: dark ? "#111418" : "#F7F8FA",
-    card: dark ? "#1C2128" : "#FFFFFF",
-    text: dark ? "#F7F8FA" : "#15171B",
-    secondary: dark ? "#A5ADB9" : "#727C89",
-    track: dark ? "#2B323B" : "#EDF1F4",
+    background: dark ? "#111418" : "#F9FDFF",
+    card: dark ? "#1C2128" : "#ECF5FC",
+    text: dark ? "#F9FDFF" : "#263748",
+    secondary: dark ? "#A5ADB9" : "#7F94A7",
+    track: dark ? "#2B323B" : "#DDEDFD",
   };
 }
 export type Theme = ReturnType<typeof useTheme>;
