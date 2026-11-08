@@ -1,3 +1,4 @@
+import { percentTrend } from "../data/kpi-trends";
 import { AIAnalysis } from "./AIAnalysis";
 import { TotalScore } from "./TotalScore";
 import { HealthDetailSheet } from "./HealthDetailSheet";
@@ -69,6 +70,22 @@ export function HealthHistory() {
   });
   const sleepRows = rows.filter((row) => row.seconds > 0);
   const scores = rows.flatMap((row) => row.score === undefined ? [] : [row.score]);
+  const periodStart = startOfDay(new Date(history[0]!.date));
+  const previousEnding = addDays(startOfDay(ending), -days);
+  const priorNights = sleepHistory(data.sleep, previousEnding, days).filter((night) => night.seconds > 0);
+  const priorForms = forms.filter((entry) => entry.day >= dayKey(addDays(periodStart, -days)) && entry.day <= dayKey(previousEnding));
+  const meanOf = (values: number[]) => values.length ? values.reduce((total, value) => total + value, 0) / values.length : undefined;
+  const completeEnd = new Date(Math.min(+addDays(startOfDay(ending), 1), +startOfDay(new Date())));
+  const completeDays = Math.max(0, history.filter((night) => +new Date(night.date) < +completeEnd).length);
+  const completeTotal = (start: Date, end: Date) => {
+    const readings = inRange(data.steps, start, end);
+    return completeDays > 0 && new Set(readings.map((row) => dayKey(new Date(row.date)))).size === completeDays ? sum(readings) : undefined;
+  };
+  const trends = [
+    example ? undefined : percentTrend(meanOf(sleepRows.map((row) => row.seconds)), meanOf(priorNights.map((night) => night.seconds))),
+    stepsExample ? undefined : percentTrend(completeTotal(periodStart, completeEnd), completeTotal(addDays(periodStart, -days), addDays(completeEnd, -days))),
+    formExample ? undefined : percentTrend(meanOf(scores), meanOf(priorForms.map(dailyScore))),
+  ];
   const stats = [
     { label: "S\u00f8vn", value: sleepRows.length ? sleepTime(sleepRows.reduce((total, row) => total + row.seconds, 0) / sleepRows.length) : "Ingen data", detail: "Snitt per natt", example, color: theme.lavender },
     { label: "Skritt", value: number(rows.reduce((total, row) => total + (row.steps ?? 0), 0)), detail: `Totalt siste ${days} dager`, example: stepsExample, color: theme.mint },
@@ -118,6 +135,8 @@ export function HealthHistory() {
               <Text style={{ color: theme.secondary, fontSize: 12, fontWeight: "500" }}>{stat.label}</Text>
             </View>
             <Text style={{ color: theme.text, fontSize: 21, letterSpacing: -0.6, fontWeight: "600", fontVariant: ["tabular-nums"] }}>{stat.value}</Text>
+            <Text style={{ color: trends[index] === undefined ? theme.secondary : stat.color, fontSize: 12, fontWeight: "600" }}>{trends[index] === undefined ? "Ingen sammenligning" : `${trends[index]! > 0 ? "↑ +" : trends[index]! < 0 ? "↓ −" : "→ "}${number(Math.abs(trends[index]!), 1)} %`}</Text>
+            <Text style={{ color: theme.secondary, fontSize: 10 }}>{index === 1 ? `${completeDays} hele dager mot forrige periode` : `Snitt mot forrige ${days} dager`}</Text>
             </Pressable>
           </Entrance>
         ))}
