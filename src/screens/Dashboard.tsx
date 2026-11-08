@@ -1,4 +1,5 @@
 import { TrainingCalendar } from "../components/TrainingCalendar";
+import { WeekInsights } from "../components/WeekInsights";
 import { HealthHistory } from "../components/HealthHistory";
 import { SleepNight } from "../components/SleepNight";
 import React, { useEffect, useRef } from "react";
@@ -160,6 +161,7 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
         loading={journal.loading}
       />
       <TrainingCalendar />
+      <WeekInsights />
       <DailyFormOverview chartOnly />
       <Status />
       <CollapsibleCard
