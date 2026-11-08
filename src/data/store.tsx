@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import { restoreStartupState } from "./startup";
 import { ImportInfo, ImportedSteps } from "./apple-export";
 import { readSavedImport, saveImport, eraseImport } from "./import-storage";
@@ -36,8 +36,8 @@ type Preferences = {
   average: boolean;
 };
 const defaults: Preferences = {
-  onboarded: false,
-  demo: false,
+  onboarded: Platform.OS === "web",
+  demo: Platform.OS === "web",
   source: "pedometer",
   goal: 10000,
   miles: false,

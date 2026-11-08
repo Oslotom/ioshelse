@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker from "../components/DatePicker";
 import { useHealth } from "../data/store";
 import { nightSleep, sleepHistory, sleepTime } from "../data/sleep";
 import { dateLabel, sleepDuration } from "../data/models";

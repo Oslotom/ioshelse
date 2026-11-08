@@ -207,3 +207,23 @@ Oversikt har også en samlet graf for søvn (linje med tonet fyll), skritt
 (ansikt per dato). Velg 7 eller 14 dager og en sluttdato. Seriene kan skjules
 og vises hver for seg, og hele kortet kan minimeres. Trykk eller dra i grafen
 for detaljer per dato. Manglende registreringer fylles ikke inn med null.
+
+### Nettleser og gratis forhåndsvisningslenke
+
+Web åpner med tydelig merkede eksempeldata og lokal nettleserlagring.
+Kjør `npm ci` etter oppdatering og dobbeltklikk **Start VITAL nettleser.bat**
+på Windows. Alternativt: `npm run start:web`. Expo åpner en lokal nettleser;
+PC-en må være på for lokal forhåndsvisning.
+
+For en offentlig lenke uten PC: velg **Settings → Pages → Source → GitHub Actions**
+i GitHub-repositoriet. Kjør deretter **Actions → Publish web preview → Run workflow**.
+Når publiseringen er grønn, er adressen `https://oslotom.github.io/ioshelse/`.
+Arbeidsflyten oppdaterer deretter siden ved push til main. Publiseringen krever
+at Pages er tilgjengelig på kontoens repository-abonnement (offentlige
+repositorier støtter gratis Pages). Ingen private logger legges i bygget;
+besøkendes registreringer lagres i deres egen nettleser.
+
+Datoer og JSON-filer har webtilpasninger. Kart viser OpenStreetMap og siste
+registrerte posisjon; full rutetegning vises i mobilappen. Apple Helse-import,
+HealthKit og iPhone-skrittelleren brukes i mobilappen. Web er en forhåndsvisning,
+ikke en erstatning for å teste sensorer og native funksjoner på iPhone.

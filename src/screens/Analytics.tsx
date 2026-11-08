@@ -4,7 +4,7 @@ import { WorkoutEntry, timerLabel } from "../data/journal";
 import { runDistance, runSeconds, paceLabel } from "../data/running";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker from "../components/DatePicker";
 import { useHealth } from "../data/store";
 import {
   addDays,

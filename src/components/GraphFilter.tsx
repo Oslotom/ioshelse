@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker from "./DatePicker";
 import { addDays, startOfDay } from "../data/models";
 import { GraphPeriod, graphPeriods, graphRange } from "../data/graph-range";
 import { useVitalTheme } from "./UI";

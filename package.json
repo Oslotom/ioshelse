@@ -12,9 +12,12 @@
     "export:ios": "expo export --platform ios",
     "build:ios": "eas build --platform ios --profile production",
     "build:development": "eas build --platform ios --profile development",
-    "start:go": "expo start --go"
+    "start:go": "expo start --go",
+    "start:web": "expo start --web --localhost",
+    "export:web": "expo export --platform web --output-dir dist-web"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~58.0.15",
     "@expo/vector-icons": "^15.0.2",
     "@kingstinct/react-native-healthkit": "^16.2.0",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -38,12 +41,14 @@
     "expo-status-bar": "~58.0.4",
     "fflate": "^0.8.3",
     "react": "19.3.0",
+    "react-dom": "19.3.0",
     "react-native": "0.88.0",
     "react-native-maps": "1.29.11",
     "react-native-nitro-modules": "^0.37.1",
     "react-native-safe-area-context": "~5.10.1",
     "react-native-screens": "~4.30.0",
     "react-native-svg": "15.16.0",
+    "react-native-web": "~0.21.4",
     "saxes": "^6.0.0"
   },
   "devDependencies": {
