@@ -46,3 +46,9 @@ export function journalStats(entries: JournalEntry[], now = new Date()) {
     workoutCount,
   };
 }
+
+export function monthlyWorkoutCount(entries: JournalEntry[], now = new Date()) {
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  return entries.filter((entry) => entry.kind === "workout" &&
+    +new Date(entry.endedAt) >= +start && +new Date(entry.endedAt) <= +now).length;
+}

@@ -1,3 +1,5 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { monthlyWorkoutCount } from "../data/journal-stats";
 import React from "react";
 import { Text, View, useWindowDimensions } from "react-native";
 import Svg, { Circle } from "react-native-svg";
@@ -37,6 +39,7 @@ export function JournalKPIs({ entries, ready, loading }: {
   const form = ready && !loading ? dailyEntries(entries).find((item) => item.day === dayKey(now)) : undefined;
   const score = form ? dailyScore(form) : undefined;
   const seconds = sleepDuration(nightSleep(data.sleep, now));
+  const workouts = ready && !loading ? monthlyWorkoutCount(entries, now) : undefined;
   const goal = preferences.goal > 0 ? preferences.goal : undefined;
   const items = [
     { title: "Skritt", value: stepCount === undefined ? "–" : number(stepCount), color: theme.mint,
@@ -64,6 +67,15 @@ export function JournalKPIs({ entries, ready, loading }: {
         <Text style={{ fontSize: 11, color: theme.secondary, textAlign: "center" }}>{item.subtitle}</Text>
         <Text style={{ fontSize: 10, color: theme.secondary, textAlign: "center" }}>{item.reference}</Text>
       </View>)}
+    </View>
+    <View accessible accessibilityLabel={`${workouts === undefined ? "Ikke lastet" : workouts} loggede treningsøkter denne måneden`}
+      style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 16, backgroundColor: theme.orange + "12" }}>
+      <Ionicons name="fitness-outline" size={24} color={theme.orange} />
+      <View style={{ flex: 1, gap: 3 }}>
+        <Text style={{ color: theme.text, fontSize: 14, fontWeight: "600" }}>Treningsøkter denne måneden</Text>
+        <Text style={{ color: theme.secondary, fontSize: 11 }}>Fullførte økter i egen logg · {now.toLocaleDateString("nb-NO", { month: "long" })}</Text>
+      </View>
+      <Text style={{ color: theme.orange, fontSize: 28, fontWeight: "700" }}>{workouts === undefined ? "–" : number(workouts)}</Text>
     </View>
     {preferences.demo && <Copy small>Eksempeldata · ikke dine målinger</Copy>}
   </Card>;

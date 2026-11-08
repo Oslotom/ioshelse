@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { journalStats } from "../src/data/journal-stats";
+import { journalStats, monthlyWorkoutCount } from "../src/data/journal-stats";
 import { JournalEntry } from "../src/data/journal";
 import { addDays, startOfDay } from "../src/data/models";
 const now = new Date(2026, 9, 24, 12),
@@ -68,4 +68,17 @@ test("completed workout time is clipped at the seven-day boundary", () => {
   const result = journalStats([row], now);
   assert.equal(result.workoutSeconds, 1800);
   assert.equal(result.workoutCount, 1);
+});
+
+test("monthly workout count uses completion date and excludes future and other logs", () => {
+  const now = new Date(2026, 10, 8, 12);
+  const workout = (id: string, end: Date): JournalEntry => ({ id, kind: "workout", activity: "Løping", date: new Date(+end - 60000).toISOString(), startedAt: new Date(+end - 60000).toISOString(), endedAt: end.toISOString(), seconds: 60, note: "" });
+  assert.equal(monthlyWorkoutCount([
+    workout("boundary", new Date(2026, 10, 1)),
+    workout("previous", new Date(2026, 9, 31, 23, 59)),
+    workout("today", now),
+    workout("future", new Date(+now + 60000)),
+    form("form", now, 4),
+  ], now), 2);
+  assert.equal(monthlyWorkoutCount([], now), 0);
 });
