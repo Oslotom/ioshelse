@@ -44,8 +44,9 @@ export type DashboardProps = {
   onSteps: () => void;
   onHeart: () => void;
   onSettings: () => void;
+  onWeight: () => void;
 };
-export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
+export function Dashboard({ onSteps, onHeart, onSettings, onWeight }: DashboardProps) {
   const journal = useJournal(),
     { data, preferences, phoneOnly, importedOnly } = useHealth(),
     theme = useVitalTheme();
@@ -154,7 +155,7 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
           />
         </Pressable>
       </View>
-      <HealthHistory />
+      <HealthHistory onWeight={onWeight} />
       <JournalKPIs
         entries={journal.data.entries}
         ready={journal.available}

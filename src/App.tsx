@@ -1,3 +1,4 @@
+import { WeightScreen } from "./screens/Weight";
 import { RunningScreen } from "./screens/Running";
 import { RunTrackingProvider } from "./data/run-tracking";
 import React, { useState } from "react";
@@ -30,6 +31,7 @@ import { SleepScreen } from "./screens/Sleep";
 import { Onboarding, Settings } from "./screens/Settings";
 
 export type StackParams = {
+  Weight: undefined;
   Run: { id?: string } | undefined;
   Main: NavigatorScreenParams<TabParams> | undefined;
   Steps: undefined;
@@ -116,6 +118,7 @@ function Tabs({ navigation }: NativeStackScreenProps<StackParams, "Main">) {
                 onSteps={() => navigation.navigate("Steps")}
                 onHeart={() => navigation.navigate("Heart")}
                 onSettings={() => navigation.navigate("Settings")}
+                onWeight={() => navigation.navigate("Weight")}
               />
             </SafeAreaView>
           )}
@@ -240,6 +243,7 @@ function Root() {
               component={Tabs}
               options={{ headerShown: false }}
             />
+            <Stack.Screen name="Weight" component={WeightScreen} options={{ title: "Vekt" }} />
             <Stack.Screen
               name="Run"
               component={RunningScreen}

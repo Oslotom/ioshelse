@@ -1,3 +1,4 @@
+import { exampleWeight } from "../data/weight";
 import { percentTrend } from "../data/kpi-trends";
 import { AIAnalysis } from "./AIAnalysis";
 import { TotalScore } from "./TotalScore";
@@ -32,7 +33,8 @@ import { dailyEntries, dailyScore, dayKey } from "../data/daily-form";
 import { sleepHistory, sleepTime } from "../data/sleep";
 import { Entrance, useVitalTheme } from "./UI";
 
-export function HealthHistory() {
+export function HealthHistory({ onWeight }: { onWeight: () => void }) {
+  const weight = exampleWeight().at(-1)!;
   const journal = useJournal();
   const { data } = useHealth(),
     theme = useVitalTheme();
@@ -139,6 +141,16 @@ export function HealthHistory() {
             </Pressable>
           </Entrance>
         ))}
+        <Entrance delay={355} style={{ flexGrow: 1, flexBasis: 90, paddingHorizontal: 12, paddingVertical: 16 }}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Åpne vekt, eksempeldata" onPress={onWeight} style={{ gap: 8, minHeight: 60 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View style={{ width: 5, height: 14, borderRadius: 3, backgroundColor: theme.blue }} />
+              <Text style={{ color: theme.secondary, fontSize: 12 }}>Vekt</Text>
+            </View>
+            <Text style={{ color: theme.text, fontSize: 21, fontWeight: "600" }}>{number(weight.value, 1)} kg</Text>
+            <Text style={{ color: theme.secondary, fontSize: 10 }}>Eksempeldata · vis mer →</Text>
+          </Pressable>
+        </Entrance>
       </View>
       {periodOpen && (
         <View
