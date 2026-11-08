@@ -162,12 +162,12 @@ export function Dashboard({ onSteps, onHeart, onSettings }: DashboardProps) {
           />
         </Pressable>
       </View>
+      <HealthHistory />
       <JournalKPIs
         entries={journal.data.entries}
         ready={journal.available}
         loading={journal.loading}
       />
-      <HealthHistory />
       <DailyFormOverview chartOnly />
       <Status />
       <CollapsibleCard

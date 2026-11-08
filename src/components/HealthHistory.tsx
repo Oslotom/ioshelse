@@ -24,12 +24,13 @@ import {
 import { dailyEntries, dailyScore, dayKey } from "../data/daily-form";
 import { sleepHistory, sleepTime } from "../data/sleep";
 import { CollapsibleCard } from "./CollapsibleCard";
-import { Copy, useVitalTheme } from "./UI";
+import { useVitalTheme } from "./UI";
 
 export function HealthHistory() {
-  const { data, preferences } = useHealth(),
+  const { data } = useHealth(),
     journal = useJournal(),
     theme = useVitalTheme();
+  const [periodOpen, setPeriodOpen] = useState(false);
   const [days, setDays] = useState<7 | 14>(7),
     [ending, setEnding] = useState(new Date());
   const [visible, setVisible] = useState({
@@ -92,7 +93,8 @@ export function HealthHistory() {
     );
   return (
     <CollapsibleCard
-      title="Søvn, skritt og form"
+      title="Hovedgraf"
+      style={{ marginHorizontal: -20, borderRadius: 0, shadowOpacity: 0 }}
       icon="analytics-outline"
       color={theme.lavender}
       summary={`${days} dager · til ${dateLabel(ending)}`}
@@ -101,53 +103,91 @@ export function HealthHistory() {
         .map((row) => ({ date: row.date, value: row.seconds / 3600 }))}
       sparklineLabel="Søvntimer"
     >
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        {([7, 14] as const).map((period) => (
-          <Pressable
-            key={period}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: days === period }}
-            onPress={() => setDays(period)}
-            style={{
-              flex: 1,
-              minHeight: 44,
-              borderRadius: 12,
-              backgroundColor:
-                days === period ? theme.lavender + "22" : theme.track,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text
+      <View style={{ alignItems: "flex-end" }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Velg periode for hovedgrafen"
+          accessibilityState={{ expanded: periodOpen }}
+          onPress={() => setPeriodOpen((open) => !open)}
+          style={{
+            minHeight: 44,
+            paddingHorizontal: 14,
+            borderRadius: 14,
+            backgroundColor: theme.track,
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ color: theme.text, fontSize: 13, fontWeight: "600" }}>
+            {days} dager · {dateLabel(ending)} {periodOpen ? "⌃" : "⌄"}
+          </Text>
+        </Pressable>
+      </View>
+      {periodOpen && (
+        <View
+          style={{
+            backgroundColor: theme.card,
+            borderWidth: 1,
+            borderColor: theme.track,
+            borderRadius: 16,
+            padding: 10,
+            gap: 6,
+          }}
+        >
+          {([7, 14] as const).map((period) => (
+            <Pressable
+              key={period}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: days === period }}
+              onPress={() => {
+                setDays(period);
+                setPeriodOpen(false);
+              }}
               style={{
-                color: days === period ? theme.lavender : theme.secondary,
-                fontWeight: "600",
+                minHeight: 44,
+                paddingHorizontal: 12,
+                justifyContent: "center",
+                borderRadius: 10,
+                backgroundColor:
+                  days === period ? theme.lavender + "18" : "transparent",
               }}
             >
-              {period} dager
+              <Text
+                style={{
+                  color: days === period ? theme.lavender : theme.text,
+                  fontWeight: "600",
+                }}
+              >
+                {period} dager{days === period ? "  ✓" : ""}
+              </Text>
+            </Pressable>
+          ))}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 12,
+            }}
+          >
+            <Text style={{ color: theme.secondary, fontSize: 13 }}>
+              Til og med
             </Text>
-          </Pressable>
-        ))}
-      </View>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Copy small>Til og med</Copy>
-        <DateTimePicker
-          value={ending}
-          maximumDate={new Date()}
-          mode="date"
-          locale="nb-NO"
-          themeVariant={theme.dark ? "dark" : "light"}
-          onChange={(_, value) => {
-            if (value) setEnding(startOfDay(value));
-          }}
-        />
-      </View>
+            <DateTimePicker
+              value={ending}
+              maximumDate={new Date()}
+              mode="date"
+              locale="nb-NO"
+              themeVariant={theme.dark ? "dark" : "light"}
+              onChange={(_, value) => {
+                if (value) {
+                  setEnding(startOfDay(value));
+                  setPeriodOpen(false);
+                }
+              }}
+            />
+          </View>
+        </View>
+      )}
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
         {(
           [
@@ -190,11 +230,14 @@ export function HealthHistory() {
         ))}
       </View>
       <View
+        style={{ marginHorizontal: -22 }}
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel="Daglig søvn, skritt og form. Dra eller bruk neste og forrige dato."
-        accessibilityValue={{ text: dateLabel(chosen.date) }}
+        accessibilityValue={{
+          text: `${dateLabel(chosen.date)}. Søvn: ${chosen.seconds ? sleepTime(chosen.seconds) : "ingen data"}. Skritt: ${chosen.steps ?? "ingen data"}. Form: ${chosen.score === undefined ? "ikke registrert" : number(chosen.score, 1)}`,
+        }}
         accessibilityActions={[
           { name: "increment", label: "Neste dato" },
           { name: "decrement", label: "Forrige dato" },
@@ -363,51 +406,6 @@ export function HealthHistory() {
           ))}
         </Svg>
       </View>
-      <View
-        style={{
-          backgroundColor: theme.track,
-          borderRadius: 14,
-          padding: 13,
-          gap: 5,
-        }}
-      >
-        <Text style={{ color: theme.text, fontWeight: "600" }}>
-          {dateLabel(chosen.date)}
-        </Text>
-        {visible.sleep && (
-          <Copy small>
-            Søvn:{" "}
-            {chosen.seconds > 0 ? sleepTime(chosen.seconds) : "Ingen data"}
-          </Copy>
-        )}
-        {visible.steps && (
-          <Copy small>
-            Skritt:{" "}
-            {chosen.steps === undefined
-              ? "Ingen data"
-              : `${number(chosen.steps)} / 10 000`}
-          </Copy>
-        )}
-        {visible.form && (
-          <Copy small>
-            Form:{" "}
-            {chosen.score === undefined
-              ? "Ikke registrert"
-              : `${face(chosen.score)} ${number(chosen.score, 1)} / 10 · subjektiv score`}
-          </Copy>
-        )}
-        {!visible.sleep && !visible.steps && !visible.form && (
-          <Copy small>
-            Alle data er skjult. Trykk på Søvn, Skritt eller Form for å vise
-            dem.
-          </Copy>
-        )}
-      </View>
-      <Copy small>
-        Trykk eller dra i grafen for en dato. Manglende data vises som opphold.{" "}
-        {dateLabel(rows[0]!.date)}–{dateLabel(rows.at(-1)!.date)}
-        {preferences.demo ? " · eksempeldata" : ""}
-      </Copy>
     </CollapsibleCard>
   );
 }

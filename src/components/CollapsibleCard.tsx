@@ -1,5 +1,5 @@
 import React, { PropsWithChildren, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, ViewStyle } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Reading } from "../data/models";
 import { Sparkline } from "./Sparkline";
@@ -14,7 +14,9 @@ export function CollapsibleCard({
   sparklineLabel,
   maxGap,
   children,
+  style,
 }: PropsWithChildren<{
+  style?: ViewStyle;
   title: string;
   icon: React.ComponentProps<typeof Ionicons>["name"];
   color: string;
@@ -27,7 +29,7 @@ export function CollapsibleCard({
   const [collapsed, setCollapsed] = useState(false),
     theme = useVitalTheme();
   return (
-    <Card>
+    <Card style={style}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${collapsed ? "Utvid" : "Minimer"} ${title}`}
